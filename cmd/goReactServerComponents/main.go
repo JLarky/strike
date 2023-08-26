@@ -1,7 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
 
-func main	() {
-	fmt.Println("Hello World")
-}	
+	"github.com/JLarky/goReactServerComponents/internal/routes"
+)
+
+func main() {
+	r := routes.NewRouter()
+
+	fmt.Println("Server starting on http://localhost:3333")
+	http.ListenAndServe(":3333", r)
+}
