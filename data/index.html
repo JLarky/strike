@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Title</title>
+  </head>
+  <body>
+    <div id="root"><div>Hello</div></div>
+    <script type="module">
+      import React from "https://esm.sh/react@canary?dev";
+      import { hydrateRoot } from "https://esm.sh/react-dom@canary/client?dev";
+      import { jsx, jsxs } from "https://esm.sh/react@canary/jsx-runtime?dev";
+
+      const App = (props) => {
+        const [name, setName] = React.useState("Hello");
+        React.useEffect(() => {
+          setTimeout(() => {
+            setName("Hello World");
+          }, 1000);
+        }, []);
+        return jsxs("div", { children: [name, props.children] });
+      };
+
+      const script = document.body.firstChild.nextSibling.textContent;
+
+      const reactNode = jsxs("html", {
+        lang: "en",
+        children: [
+          jsx("head", {
+            children: jsx("title", {
+              children: "Title",
+            }),
+          }),
+          jsxs("body", {
+            children: [
+              jsx("div", {
+                id: "root",
+                children: jsx(App, {}),
+              }),
+              jsx("script", {
+                type: "module",
+                children: script,
+              }),
+            ],
+          }),
+        ],
+      });
+
+      const newReactNode = jsxs("html", {
+        lang: "en",
+        children: [
+          jsx("head", {
+            children: jsx("title", {
+              children: "New Title",
+            }),
+          }),
+          jsxs("body", {
+            children: [
+              jsx("div", {
+                id: "root2",
+                children: jsx(App, {
+                  // key: 'new key',
+                  children: jsx("div", { children: "server prop" }),
+                }),
+              }),
+              jsx("script", {
+                type: "module",
+                children: script,
+              }),
+            ],
+          }),
+        ],
+      });
+
+      const fetchRSC = React.cache(async (url) => {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        if (url === "/") {
+          return packUnpack(reactNode);
+        } else if (url === "/new") {
+          return packUnpack(newReactNode);
+        }
+      });
+
+      const RscComponent = ({ url }) => {
+        const jsx = React.use(fetchRSC(url));
+        console.log("switched to", url);
+        return jsx;
+      };
+
+      const ClientRouter = ({ initialUrl }) => {
+        const [url, setUrl] = React.useState(initialUrl);
+        React.useEffect(() => {
+          setTimeout(async () => {
+            setUrl("/new");
+          }, 2000);
+        }, []);
+        // return <SomeProvider value={url}><RscComponent /></SomeProvider>;
+        return jsx(RscComponent, { url });
+      };
+
+      hydrateRoot(document, jsx(ClientRouter, { initialUrl: "/" }));
+
+      //
+      function packUnpack(reactNode) {
+        // this is our way to emulate network boundary
+        const string = JSON.stringify(
+          reactNode,
+          function replacer(key, value) {
+            if (key === "$$typeof") {
+              return String(value);
+            } else if (key === "type" && typeof value === "function") {
+              return `_CLIENT_${value.name}`;
+            } else if (key === "_store" || key === "_owner") {
+              return undefined; // this somehow fixes the hydration warning
+            } else {
+              return value;
+            }
+          },
+          2
+        );
+
+        // console.log(string);
+
+        const dehydrated = JSON.parse(string, function reviver(key, value) {
+          if (key === "$$typeof") {
+            return Symbol.for("react.element");
+          } else if (key === "type" && ("" + value).startsWith("_CLIENT_")) {
+            return App;
+          } else {
+            return value;
+          }
+        });
+
+        // console.log(dehydrated);
+        return dehydrated;
+      }
+    </script>
+  </body>
+</html>

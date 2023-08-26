@@ -2,6 +2,7 @@ package routes
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -12,6 +13,8 @@ type Handler func(w http.ResponseWriter, r *http.Request) error
 
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := h(w, r); err != nil {
+		// log the error
+		fmt.Println(err)
 		// handle returned error here.
 		w.WriteHeader(503)
 		w.Write([]byte("bad"))
@@ -39,6 +42,8 @@ func customHandler(w http.ResponseWriter, r *http.Request) error {
 		return errors.New(q)
 	}
 
-	w.Write([]byte("foo bar"))
+	w.Header().Set("Content-Type", "text/html")
+	http.ServeFile(w, r, "data/index.html")
+
 	return nil
 }
