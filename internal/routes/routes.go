@@ -35,7 +35,9 @@ func NewRouter() *chi.Mux {
 		w.Write([]byte("hello world 1123"))
 	})
 	r.Method("GET", "/index.html", Handler(staticHandler))
+	r.Method("GET", "/client.js", Handler(staticHandler2))
 	r.Method("GET", "/", Handler(rscHandler))
+	r.Method("GET", "/about", Handler(rscHandler))
 
 	return r
 }
@@ -49,6 +51,19 @@ func staticHandler(w http.ResponseWriter, r *http.Request) error {
 
 	w.Header().Set("Content-Type", "text/html")
 	http.ServeFile(w, r, "data/index.html")
+
+	return nil
+}
+
+func staticHandler2(w http.ResponseWriter, r *http.Request) error {
+	q := r.URL.Query().Get("err")
+
+	if q != "" {
+		return errors.New(q)
+	}
+
+	w.Header().Set("Content-Type", "text/javascript")
+	http.ServeFile(w, r, "data/client.js")
 
 	return nil
 }
@@ -67,12 +82,10 @@ func Text(v interface{}) HTML {
 func rscHandler(w http.ResponseWriter, r *http.Request) error {
 	page := Component{
 		Tag_type: "div",
-		Props:    map[string]interface{}{"id": "root", "children": Text("My page" + fmt.Sprint(r.Context().Value(middleware.RequestIDKey)))},
+		Props:    map[string]interface{}{"id": "root", "children": Text("My page" + fmt.Sprint(r.Context().Value(middleware.RequestIDKey)) + " " + r.URL.Path)},
 	}
 
 	jsonData, err := json.Marshal(page)
-
-	fmt.Println(string(jsonData))
 
 	if err != nil {
 		return err
@@ -100,6 +113,13 @@ func rscHandler(w http.ResponseWriter, r *http.Request) error {
 		return errors.New(q)
 	}
 
+	rsc := r.Header.Get("RSC")
+	if rsc == "1" {
+		w.Header().Set("Content-Type", "text/x-component; charset=utf-8")
+		w.Write(jsonData)
+		return nil
+	}
+
 	const tpl = `<!DOCTYPE html>
 	<html lang="en">
 	  <head>
@@ -108,21 +128,9 @@ func rscHandler(w http.ResponseWriter, r *http.Request) error {
 	  <body>
 		{{.HtmlString}}
 		<script type="module">
-		  import React from "https://esm.sh/react@canary?dev";
-		  import { createRoot } from "https://esm.sh/react-dom@canary/client?dev";
-		  import { jsx, jsxs } from "https://esm.sh/react@canary/jsx-runtime?dev";
-
+		  import {renderPage} from "./client.js";
 		  const x = JSON.parse("{{.JsonData}}");
-		  const page = jsx(x.tag_type, x.props);
-		  console.log(x, page);
-
-		  const ClientRouter = ({ initialUrl }) => {
-			console.log("initialUrl", initialUrl);
-			return page
-		  };
-
-
-		  createRoot(document.body).render(jsx(ClientRouter, { initialUrl: "/" }));
+		  renderPage(x);
 		</script>
 	  </body>
     </html>`
@@ -152,3 +160,9 @@ func rscHandler(w http.ResponseWriter, r *http.Request) error {
 
 	return nil
 }
+
+// http hello world 60-80k rps
+// my RSC 45k rps
+// Fresh hello world 15k
+// Fresh with islands 10k
+// Next.js app dir 3-4k rps
