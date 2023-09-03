@@ -27,9 +27,14 @@ func RenderToString(wr io.Writer, comp h.Component) error {
 	}
 	for _, child := range comp.Children {
 		if child != nil {
-			err = childTpl.Execute(wr, child)
-			if err != nil {
-				return err
+			switch childComp := child.(type) {
+			case h.Component:
+				RenderToString(wr, childComp)
+			default:
+				err = childTpl.Execute(wr, child)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

@@ -16,9 +16,11 @@ func TestOneChild(t *testing.T) {
 	assert.Equal(t, `<div style="color: red;">HelloWorld</div>`, buf.String())
 }
 
-func TestOneChild(t *testing.T) {
+func TestChildDeep(t *testing.T) {
 	a := H("div", "Hello", "World", Props{"style": "color: red;"})
+	b := H("main", a)
+	c := H("body", b, H("footer", "Copyright"))
 	buf := new(bytes.Buffer)
-	_ = strike.RenderToString(buf, a)
-	assert.Equal(t, `<div style="color: red;">HelloWorld</div>`, buf.String())
+	_ = strike.RenderToString(buf, c)
+	assert.Equal(t, `<body><main><div style="color: red;">HelloWorld</div></main><footer>Copyright</footer></body>`, buf.String())
 }
