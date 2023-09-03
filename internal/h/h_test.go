@@ -37,9 +37,7 @@ func TestNoChildrenWithProps(t *testing.T) {
 
 func TestCustomComponent(t *testing.T) {
 	c := func(c Component) Component {
-		a := c.Children
-		a = append(a, c.Props)
-		return H("div", a...)
+		return H("div", c.Props, c.Children)
 	}
 	a := H(c, Props{"style": "color: red;"})
 	fmt.Println(a.Props)
