@@ -2,6 +2,7 @@ package routes
 
 import (
 	"bytes"
+	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -36,7 +37,6 @@ func NewRouter() *chi.Mux {
 	r.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("hello world 1123"))
 	})
-	r.Method("GET", "/index.html", Handler(staticHandler))
 	r.Method("GET", "/client.js", Handler(staticHandler2))
 	r.Method("GET", "/", Handler(rscHandler))
 	r.Method("GET", "/about", Handler(rscHandler))
@@ -44,18 +44,8 @@ func NewRouter() *chi.Mux {
 	return r
 }
 
-func staticHandler(w http.ResponseWriter, r *http.Request) error {
-	q := r.URL.Query().Get("err")
-
-	if q != "" {
-		return errors.New(q)
-	}
-
-	w.Header().Set("Content-Type", "text/html")
-	http.ServeFile(w, r, "data/index.html")
-
-	return nil
-}
+//go:embed static/*
+var static embed.FS
 
 func staticHandler2(w http.ResponseWriter, r *http.Request) error {
 	q := r.URL.Query().Get("err")
@@ -65,7 +55,11 @@ func staticHandler2(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	w.Header().Set("Content-Type", "text/javascript")
-	http.ServeFile(w, r, "data/client.js")
+	f, err := static.ReadFile("static/client.js")
+	if err != nil {
+		return err
+	}
+	w.Write(f)
 
 	return nil
 }
