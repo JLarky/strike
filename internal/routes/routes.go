@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html"
 	"html/template"
 	"net/http"
 
+	"github.com/JLarky/goReactServerComponents/internal/h"
+	. "github.com/JLarky/goReactServerComponents/internal/h"
+	"github.com/JLarky/goReactServerComponents/internal/strike"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -68,22 +70,18 @@ func staticHandler2(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-type HTML string
-
-type Component struct {
-	Tag_type string      `json:"tag_type"`
-	Props    interface{} `json:"props"`
-}
-
-func Text(v interface{}) HTML {
-	return HTML("\n" + html.EscapeString(fmt.Sprint(v)))
-}
-
 func rscHandler(w http.ResponseWriter, r *http.Request) error {
-	page := Component{
-		Tag_type: "div",
-		Props:    map[string]interface{}{"id": "root", "children": Text("My page" + fmt.Sprint(r.Context().Value(middleware.RequestIDKey)) + " " + r.URL.Path)},
-	}
+	nav := H("nav",
+		H("a", h.Props{"href": "/"}, "Home"), " ",
+		H("a", h.Props{"href": "/about"}, "About"),
+	)
+	page := H("div", h.Props{"id": "root"},
+		nav,
+		H("div",
+			H("div", "My page is "+r.URL.Path),
+			H("div", "and your IP is "+r.RemoteAddr+" (intention is to show that this is server rendered)"),
+		),
+	)
 
 	jsonData, err := json.Marshal(page)
 
@@ -91,18 +89,8 @@ func rscHandler(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	const htmlStringTpl = `<div id="root">{{.Props.children}}</div>`
-
-	htmlString, err := template.New("htmlString").Parse(htmlStringTpl)
-
-	if err != nil {
-		return err
-	}
-
 	htmlStringBuf := new(bytes.Buffer)
-
-	err = htmlString.Execute(htmlStringBuf, page)
-
+	err = strike.RenderToString(htmlStringBuf, page)
 	if err != nil {
 		return err
 	}

@@ -5,7 +5,11 @@ import { jsx, jsxs } from "https://esm.sh/react@canary/jsx-runtime?dev";
 
 export function renderPage(jsonData) {
   function jsonToJSX(x) {
-    return jsx(x.tag_type, x.props);
+    if (typeof x === "string") {
+      return x;
+    }
+    const children = x.children?.map(jsonToJSX);
+    return jsxs(x.tag_type, { ...x.props, children });
   }
   const page = jsonToJSX(jsonData);
 
