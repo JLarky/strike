@@ -1,20 +1,13 @@
 package main
 
 import (
-	"embed"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/JLarky/goReactServerComponents/internal/routes"
 )
-
-//go:embed templates/*
-var resources embed.FS
-
-var t = template.Must(template.ParseFS(resources, "templates/*"))
 
 func main() {
 	port := os.Getenv("PORT")
