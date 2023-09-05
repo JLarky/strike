@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/JLarky/goReactServerComponents/internal/assert"
-	. "github.com/JLarky/goReactServerComponents/internal/h"
+	"github.com/JLarky/strike/internal/assert"
+	. "github.com/JLarky/strike/internal/h"
 )
 
 func TestEq(t *testing.T) {

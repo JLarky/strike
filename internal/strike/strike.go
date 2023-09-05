@@ -6,7 +6,7 @@ import (
 	"html/template"
 	"io"
 
-	"github.com/JLarky/goReactServerComponents/internal/h"
+	"github.com/JLarky/strike/internal/h"
 )
 
 func RenderToString(wr io.Writer, comp h.Component) error {

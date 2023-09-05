@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/JLarky/goReactServerComponents/internal/routes"
+	"github.com/JLarky/strike/internal/routes"
 )
 
 func main() {

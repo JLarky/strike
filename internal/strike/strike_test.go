@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/JLarky/goReactServerComponents/internal/assert"
-	. "github.com/JLarky/goReactServerComponents/internal/h"
-	"github.com/JLarky/goReactServerComponents/internal/strike"
+	"github.com/JLarky/strike/internal/assert"
+	. "github.com/JLarky/strike/internal/h"
+	"github.com/JLarky/strike/internal/strike"
 )
 
 func TestOneChild(t *testing.T) {

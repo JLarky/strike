@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/JLarky/goReactServerComponents/internal/routes"
+	"github.com/JLarky/strike/internal/routes"
 )
 
 func main() {

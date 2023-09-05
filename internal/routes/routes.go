@@ -9,9 +9,9 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/JLarky/goReactServerComponents/internal/h"
-	. "github.com/JLarky/goReactServerComponents/internal/h"
-	"github.com/JLarky/goReactServerComponents/internal/strike"
+	"github.com/JLarky/strike/internal/h"
+	. "github.com/JLarky/strike/internal/h"
+	"github.com/JLarky/strike/internal/strike"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )

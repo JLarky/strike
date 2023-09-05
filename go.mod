@@ -1,4 +1,4 @@
-module github.com/JLarky/goReactServerComponents
+module github.com/JLarky/strike
 
 go 1.21.0
 
