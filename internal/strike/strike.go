@@ -13,9 +13,18 @@ func RenderToString(wr io.Writer, comp h.Component) error {
 	wr.Write([]byte("<" + comp.Tag_type))
 	for prop, value := range comp.Props {
 		// Perform a type assertion to convert `value` to a string
-		strValue, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("cannot convert prop %s to string", prop)
+		var strValue string
+		switch v := value.(type) {
+		case string:
+			strValue = v
+		case int:
+			strValue = fmt.Sprintf("%d", v)
+		case uint64:
+			strValue = fmt.Sprintf("%d", v)
+		case float64:
+			strValue = fmt.Sprintf("%f", v)
+		default:
+			return fmt.Errorf("cannot convert prop %s (%v %T) to string", prop, value, value)
 		}
 
 		wr.Write([]byte(fmt.Sprintf(` %s="%s"`, html.EscapeString(prop), html.EscapeString(strValue))))
