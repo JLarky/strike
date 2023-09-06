@@ -38,6 +38,7 @@ func NewRouter() *chi.Mux {
 		w.Write([]byte("hello world 1123"))
 	})
 	r.Method("GET", "/client.js", Handler(staticHandler2))
+	r.Method("GET", "/islands.js", Handler(staticHandler2))
 	r.Method("GET", "/", Handler(rscHandler))
 	r.Method("GET", "/about", Handler(rscHandler))
 
@@ -55,7 +56,7 @@ func staticHandler2(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	w.Header().Set("Content-Type", "text/javascript")
-	f, err := static.ReadFile("static/client.js")
+	f, err := static.ReadFile("static" + r.URL.Path)
 	if err != nil {
 		return err
 	}
@@ -64,16 +65,28 @@ func staticHandler2(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+func Island(componentName string, children ...any) Component {
+	return H("strike-island", Props{"component-export": componentName}, children)
+}
+
 func rscHandler(w http.ResponseWriter, r *http.Request) error {
 	nav := H("nav",
 		H("a", h.Props{"href": "/"}, "Home"), " ",
 		H("a", h.Props{"href": "/about"}, "About"),
 	)
+	var island Component
+
+	if r.URL.Path == "/" {
+		island = Island("Counter", "Loading...")
+	} else {
+		island = Island("Counter", H("button", "Count: 0"))
+	}
 	body := H("div", h.Props{"id": "root"},
 		nav,
 		H("div",
 			H("div", "My page is "+r.URL.Path),
 			H("div", "and your IP is "+r.RemoteAddr+" (intention is to show that this is server rendered)"),
+			island,
 		),
 	)
 

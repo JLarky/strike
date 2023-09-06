@@ -1,3 +1,4 @@
+import { StrikeIsland } from "./islands.js";
 import React from "https://esm.sh/react@canary?dev";
 import { hydrateRoot } from "https://esm.sh/react-dom@canary/client?dev";
 import { jsx, jsxs } from "https://esm.sh/react@canary/jsx-runtime?dev";
@@ -9,8 +10,16 @@ export function renderPage(jsonData) {
     if (typeof x === "string") {
       return x;
     }
+
     const children = x.children?.map(jsonToJSX);
-    return jsxs(x.tag_type, { ...x.props, children });
+    const node = jsxs(x.tag_type, { ...x.props, children });
+
+    if (x.tag_type === "strike-island") {
+      const exportName = x.props["component-export"];
+      return jsx(StrikeIsland, { exportName, serverProps: x, children: node });
+    }
+
+    return node;
   }
   const page = jsonToJSX(jsonData);
 
