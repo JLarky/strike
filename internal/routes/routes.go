@@ -69,13 +69,20 @@ func rscHandler(w http.ResponseWriter, r *http.Request) error {
 		H("a", h.Props{"href": "/"}, "Home"), " ",
 		H("a", h.Props{"href": "/about"}, "About"),
 	)
-	page := H("div", h.Props{"id": "root"},
+	body := H("div", h.Props{"id": "root"},
 		nav,
 		H("div",
 			H("div", "My page is "+r.URL.Path),
 			H("div", "and your IP is "+r.RemoteAddr+" (intention is to show that this is server rendered)"),
 		),
 	)
+
+	page := H("html", Props{"lang": "en"},
+		H("head", H("title", "Title "+r.URL.Path)),
+		H("body",
+			body,
+			H("script", Props{"type": "module", "async": "", "src": "./client.js"}),
+		))
 
 	jsonData, err := json.Marshal(page)
 
@@ -102,20 +109,7 @@ func rscHandler(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	const tpl = `<!DOCTYPE html>
-	<html lang="en">
-	  <head>
-	  <title>{{.Title}}</title>
-	  </head>
-	  <body>
-		{{.HtmlString}}
-		<script type="module">
-		  import {renderPage} from "./client.js";
-		  const x = JSON.parse("{{.JsonData}}");
-		  renderPage(x);
-		</script>
-	  </body>
-    </html>`
+	const tpl = `<!DOCTYPE html>{{.HtmlString}}<script>self.__rsc=self.__rsc||[];__rsc.push({{.JsonData}})</script>`
 
 	t, err := template.New("webpage").Parse(tpl)
 

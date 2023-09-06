@@ -1,7 +1,8 @@
-import {} from "./client.js";
 import React from "https://esm.sh/react@canary?dev";
-import { createRoot } from "https://esm.sh/react-dom@canary/client?dev";
+import { hydrateRoot } from "https://esm.sh/react-dom@canary/client?dev";
 import { jsx, jsxs } from "https://esm.sh/react@canary/jsx-runtime?dev";
+
+renderPage(JSON.parse(__rsc[0]));
 
 export function renderPage(jsonData) {
   function jsonToJSX(x) {
@@ -21,11 +22,9 @@ export function renderPage(jsonData) {
     // });
   };
 
-  // todo: use hydrate
-  const root = createRoot(document.body);
+  const root = hydrateRoot(document, page);
 
   //   root.render(jsx(ClientRouter, { initialUrl: "/" }));
-  root.render(page);
 
   let currentPathname = window.location.pathname;
 
