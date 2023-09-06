@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"sync/atomic"
 
 	"github.com/JLarky/strike/internal/h"
 	. "github.com/JLarky/strike/internal/h"
@@ -31,6 +32,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func NewRouter() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
@@ -65,9 +67,11 @@ func staticHandler2(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func Island(componentName string, children ...any) Component {
-	return H("strike-island", Props{"component-export": componentName}, children)
+func Island(componentName string, props Props, children ...any) Component {
+	return H("strike-island", props, Props{"component-export": componentName}, children)
 }
+
+var serverCounter uint64
 
 func rscHandler(w http.ResponseWriter, r *http.Request) error {
 	nav := H("nav",
@@ -77,9 +81,10 @@ func rscHandler(w http.ResponseWriter, r *http.Request) error {
 	var island Component
 
 	if r.URL.Path == "/" {
-		island = Island("Counter", "Loading...")
+		island = Island("Counter", Props{"serverCounter": serverCounter}, "Loading...")
 	} else {
-		island = Island("Counter", H("button", "Count: 0"))
+		c := atomic.AddUint64(&serverCounter, 1)
+		island = Island("Counter", Props{"serverCounter": c}, H("button", fmt.Sprintf("Count: 0 (%d)", c)))
 	}
 	body := H("div", h.Props{"id": "root"},
 		nav,

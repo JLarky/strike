@@ -15,8 +15,7 @@ export function renderPage(jsonData) {
     const node = jsxs(x.tag_type, { ...x.props, children });
 
     if (x.tag_type === "strike-island") {
-      const exportName = x.props["component-export"];
-      return jsx(StrikeIsland, { exportName, serverProps: x, children: node });
+      return jsx(StrikeIsland, { children: node });
     }
 
     return node;

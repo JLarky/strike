@@ -5,7 +5,8 @@ import { jsx, jsxs } from "https://esm.sh/react@canary/jsx-runtime?dev";
 
 console.log("counter");
 
-export function StrikeIsland({ exportName, children }) {
+export function StrikeIsland({ children }) {
+  const { "component-export": exportName } = children.props;
   if (!exportName) {
     throw new Error(`strike-island is missing component-export prop`);
   }
@@ -18,17 +19,17 @@ export function StrikeIsland({ exportName, children }) {
     setIsMounted(true);
   }, []);
   if (isMounted) {
-    return jsx(comp, {});
+    return jsx(comp, children.props);
   }
   return children;
 }
 
-export function Counter() {
+export function Counter({ serverCounter }) {
   const [count, setCount] = React.useState(0);
   return jsx("button", {
     onClick: () => {
       setCount((x) => x + 1);
     },
-    children: "Count: " + count,
+    children: `Count: ${count} (${serverCounter})`,
   });
 }
