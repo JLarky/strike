@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "./bin/api"
-  cmd = "go build -o bin/api cmd/goReactServerComponents/main.go"
+  cmd = "go build -o bin/api cmd/strike/main.go"
   delay = 0
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []
