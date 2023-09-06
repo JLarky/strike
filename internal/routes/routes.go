@@ -78,13 +78,24 @@ func rscHandler(w http.ResponseWriter, r *http.Request) error {
 		H("a", h.Props{"href": "/"}, "Home"), " ",
 		H("a", h.Props{"href": "/about"}, "About"),
 	)
+	footer := H("footer",
+		H("a", Props{"href": "https://github.com/JLarky/strike"}, "see source"),
+	)
 	var island Component
 
 	if r.URL.Path == "/" {
-		island = Island("Counter", Props{"serverCounter": serverCounter}, "Loading...")
+		island = Island(
+			"Counter",
+			Props{"serverCounter": serverCounter},
+			"Loading...",
+		)
 	} else {
 		c := atomic.AddUint64(&serverCounter, 1)
-		island = Island("Counter", Props{"serverCounter": c}, H("button", fmt.Sprintf("Count: 0 (%d)", c)))
+		island = Island(
+			"Counter",
+			Props{"serverCounter": c},
+			H("button", fmt.Sprintf("Count: 0 (%d)", c)),
+		)
 	}
 	body := H("div", h.Props{"id": "root"},
 		nav,
@@ -93,6 +104,7 @@ func rscHandler(w http.ResponseWriter, r *http.Request) error {
 			H("div", "and your IP is "+r.RemoteAddr+" (intention is to show that this is server rendered)"),
 			island,
 		),
+		footer,
 	)
 
 	page := H("html", Props{"lang": "en"},
