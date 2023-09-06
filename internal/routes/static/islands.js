@@ -3,8 +3,6 @@ import React from "https://esm.sh/react@canary?dev";
 import { hydrateRoot } from "https://esm.sh/react-dom@canary/client?dev";
 import { jsx, jsxs } from "https://esm.sh/react@canary/jsx-runtime?dev";
 
-console.log("counter");
-
 export function StrikeIsland({ children }) {
   const { "component-export": exportName } = children.props;
   if (!exportName) {
