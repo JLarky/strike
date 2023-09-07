@@ -19,6 +19,7 @@ The name `strike` doesn't have any special meaning, but it had two things going 
 # Project goals
 
 - educate people about React Server Components (outside of Next.js/Node/Vercel ecosystem)
+- not to use `react-server-dom-webpack` at all, opting for a simpler (to understand) implementation instead
 - get 10x performance improvement over Next.js for some synthetic use cases
 
 # Pre-requisites
