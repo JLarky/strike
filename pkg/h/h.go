@@ -1,14 +1,13 @@
 package h
 
-import "fmt"
+import (
+	"fmt"
 
-type Component struct {
-	Tag_type string `json:"tag_type"`
-	Props    Props  `json:"props"`
-	Children []any  `json:"children"`
-}
+	"github.com/JLarky/strike/pkg/strike"
+)
 
-type Props map[string]any
+type Component = strike.Component
+type Props = strike.Props
 
 func H(tag any, rest ...any) Component {
 	props := make(map[string]any)

@@ -5,11 +5,17 @@ import (
 	"html"
 	"html/template"
 	"io"
-
-	"github.com/JLarky/strike/internal/h"
 )
 
-func RenderToString(wr io.Writer, comp h.Component) error {
+type Component struct {
+	Tag_type string `json:"tag_type"`
+	Props    Props  `json:"props"`
+	Children []any  `json:"children"`
+}
+
+type Props map[string]any
+
+func RenderToString(wr io.Writer, comp Component) error {
 	wr.Write([]byte("<" + comp.Tag_type))
 	for prop, value := range comp.Props {
 		// Perform a type assertion to convert `value` to a string
@@ -37,7 +43,7 @@ func RenderToString(wr io.Writer, comp h.Component) error {
 	for _, child := range comp.Children {
 		if child != nil {
 			switch childComp := child.(type) {
-			case h.Component:
+			case Component:
 				err = RenderToString(wr, childComp)
 				if err != nil {
 					return err

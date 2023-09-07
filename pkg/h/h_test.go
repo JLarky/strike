@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/JLarky/strike/internal/assert"
-	. "github.com/JLarky/strike/internal/h"
+	. "github.com/JLarky/strike/pkg/h"
 )
 
 func TestEq(t *testing.T) {

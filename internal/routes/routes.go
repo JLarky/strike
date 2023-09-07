@@ -10,9 +10,9 @@ import (
 	"net/http"
 	"sync/atomic"
 
-	"github.com/JLarky/strike/internal/h"
-	. "github.com/JLarky/strike/internal/h"
-	"github.com/JLarky/strike/internal/strike"
+	"github.com/JLarky/strike/pkg/h"
+	. "github.com/JLarky/strike/pkg/h"
+	"github.com/JLarky/strike/pkg/strike"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )

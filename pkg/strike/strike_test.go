@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/JLarky/strike/internal/assert"
-	. "github.com/JLarky/strike/internal/h"
-	"github.com/JLarky/strike/internal/strike"
+	. "github.com/JLarky/strike/pkg/h"
+	"github.com/JLarky/strike/pkg/strike"
 )
 
 func TestOneChild(t *testing.T) {
