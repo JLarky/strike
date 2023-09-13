@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/JLarky/strike/pkg/h"
 	. "github.com/JLarky/strike/pkg/h"
 	"github.com/JLarky/strike/pkg/strike"
 )
@@ -76,8 +75,8 @@ func Page(url string) Component {
 	// time.Sleep(1000 * time.Millisecond)
 	fmt.Println("Page", url)
 	nav := H("nav",
-		H("a", h.Props{"href": "/"}, "Home"), " ",
-		H("a", h.Props{"href": "/about"}, "About"),
+		H("a", Props{"href": "/"}, "Home"), " ",
+		H("a", Props{"href": "/about"}, "About"),
 	)
 
 	return H("html", Props{"lang": "en"},
@@ -89,8 +88,41 @@ func Page(url string) Component {
 			H("title", "React Notes"),
 		),
 		H("body",
-			H("div", Props{"id": "root"}, nav, "Loading..."+url),
+			App(),
+			H("div", Props{"id": "root"}, nav, "Loading... "+url),
 			H("script", Props{"src": "/static/strike/bootstrap.js", "type": "module"}),
 		),
 	)
+}
+
+func App() Component {
+	return H("div", Props{"class": "main"},
+		H("section", Props{"class": "col sidebar"},
+			H("section", Props{"class": "sidebar-header"},
+				H("img", Props{"class": "logo", "src": "/static/logo.svg", "width": "22px", "height": "20px", "alt": "", "role": "presentation"}),
+				H("strong", "React Notes"),
+			),
+			H("section", Props{"class": "sidebar-menu", "role": "menubar"},
+				SearchField(),
+				EditButton(nil, "New"),
+			),
+			H("nav"), // <Suspense fallback={<NoteListSkeleton />}>
+			// 	<NoteList searchText={searchText} />
+			// </Suspense>
+
+		),
+		H("section", Props{"class": "col note-viewer"}), // 	<Suspense fallback={<NoteSkeleton isEditing={isEditing} />}>
+	// 	<Note selectedId={selectedId} isEditing={isEditing} />
+	// </Suspense>
+
+	)
+}
+
+func SearchField() Component {
+	return H("input")
+}
+
+func EditButton(rest ...any) Component {
+	fmt.Println("EditButton", rest)
+	return H("button")
 }

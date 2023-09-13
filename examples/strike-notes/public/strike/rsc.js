@@ -36,7 +36,9 @@ export function jsonToJSX(x) {
   const props = {};
   props.children = children;
   for (const [k, v] of Object.entries(x.props || {})) {
-    if (x.tag_type === "meta" && k === "charset") {
+    if (k === "class") {
+      props.className = v;
+    } else if (x.tag_type === "meta" && k === "charset") {
       props.charSet = v;
     } else {
       props[k] = v;
