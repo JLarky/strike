@@ -1,4 +1,3 @@
-// @ts-check
 import { Router } from "./router.js";
 import React from "react";
 import { hydrateRoot } from "react-dom/client";
