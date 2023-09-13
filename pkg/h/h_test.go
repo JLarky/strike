@@ -47,6 +47,14 @@ func TestCustomComponent(t *testing.T) {
 	assert.Equal(t, 0, len(a.Children))
 }
 
+func TestNilInProps(t *testing.T) {
+	a := H("div", Props{"value": nil})
+	assert.Equal(t, a.Tag_type, "div")
+	assert.Equal(t, 1, len(a.Props))
+	assert.Equal(t, nil, a.Props["value"])
+	assert.Equal(t, 0, len(a.Children))
+}
+
 func TestSpec(t *testing.T) {
 	H("div")
 	H("div#id")

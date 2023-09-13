@@ -29,6 +29,14 @@ func RenderToString(wr io.Writer, comp Component) error {
 			strValue = fmt.Sprintf("%d", v)
 		case float64:
 			strValue = fmt.Sprintf("%f", v)
+		case nil:
+			strValue = "null"
+		case *string:
+			if v == nil {
+				strValue = "null"
+			} else {
+				strValue = *v
+			}
 		default:
 			return fmt.Errorf("cannot convert prop %s (%v %T) to string", prop, value, value)
 		}
