@@ -90,6 +90,15 @@ func Page(url string) Component {
 		H("body",
 			App(),
 			H("div", Props{"id": "root"}, nav, "Loading... "+url),
+			H("script", Props{"type": "importmap"}, []template.HTML{`
+			{
+				"imports": {
+					"react": "https://esm.sh/react@canary?dev",
+					"react-dom/client": "https://esm.sh/react-dom@canary/client?dev",
+					"react/jsx-runtime": "https://esm.sh/react@canary/jsx-runtime?dev",
+					"react-error-boundary": "https://esm.sh/react-error-boundary"
+				}
+			}`}),
 			H("script", Props{"src": "/static/strike/bootstrap.js", "type": "module"}),
 		),
 	)

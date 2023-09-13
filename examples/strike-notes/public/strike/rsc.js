@@ -1,6 +1,6 @@
 // @ts-check
-import React from "https://esm.sh/react@canary?dev";
-import { jsx, jsxs } from "https://esm.sh/react@canary/jsx-runtime?dev";
+import React from "react";
+import { jsx, jsxs } from "react/jsx-runtime";
 
 export function RscComponent({ initialPage, url, routerKey }) {
   if (initialPage) {

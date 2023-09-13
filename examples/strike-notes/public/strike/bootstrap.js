@@ -1,9 +1,9 @@
 // @ts-check
 import { Router } from "./router.js";
-import React from "https://esm.sh/react@canary?dev";
-import { hydrateRoot } from "https://esm.sh/react-dom@canary/client?dev";
-import { jsx, jsxs } from "https://esm.sh/react@canary/jsx-runtime?dev";
-import { ErrorBoundary } from "https://esm.sh/react-error-boundary";
+import React from "react";
+import { hydrateRoot } from "react-dom/client";
+import { jsx, jsxs } from "react/jsx-runtime";
+import { ErrorBoundary } from "react-error-boundary";
 
 React.startTransition(() => {
   hydrateRoot(document, jsx(Root, {}));

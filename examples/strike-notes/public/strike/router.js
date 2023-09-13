@@ -1,7 +1,7 @@
 // @ts-check
 import { RscComponent, jsonToJSX } from "./rsc.js";
-import React from "https://esm.sh/react@canary?dev";
-import { jsx } from "https://esm.sh/react@canary/jsx-runtime?dev";
+import React from "react";
+import { jsx } from "react/jsx-runtime";
 
 /** @type {import("./react").useState} */
 const useState = React.useState;

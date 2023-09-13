@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM"],
     "module": "esnext",
     "target": "esnext",
     "moduleResolution": "bundler",
@@ -16,6 +16,8 @@
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
     "types": [
+      "react/canary",
+      "react-dom/canary",
       "bun-types" // add Bun global
     ]
   }
