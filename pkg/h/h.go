@@ -2,6 +2,7 @@ package h
 
 import (
 	"fmt"
+	"html/template"
 
 	"github.com/JLarky/strike/pkg/strike"
 )
@@ -14,6 +15,10 @@ func H(tag any, rest ...any) Component {
 	children := make([]any, 0)
 	for _, item := range rest {
 		switch item_type := item.(type) {
+		case []template.HTML:
+			for _, v := range item_type {
+				children = append(children, v)
+			}
 		case []any:
 			children = append(children, item_type...)
 		case Props:
