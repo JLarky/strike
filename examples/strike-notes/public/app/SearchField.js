@@ -1,42 +1,55 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
+// app/SearchField.jsx
+import {useState, useTransition} from "react";
 
-'use client';
+// app/Spinner.jsx
+import {
+jsx
+} from "react/jsx-runtime";
+function Spinner({ active = true }) {
+  return jsx("div", {
+    className: ["spinner", active && "spinner--active"].join(" "),
+    role: "progressbar",
+    "aria-busy": active ? "true" : "false"
+  });
+}
 
-import {useState, useTransition} from 'react';
-import {useRouter} from './framework/router';
-
-import Spinner from './Spinner';
-
-export default function SearchField() {
-  const [text, setText] = useState('');
+// app/SearchField.jsx
+import {
+jsx as jsx2
+} from "react/jsx-runtime";
+function SearchField() {
+  const [text, setText] = useState("");
   const [isSearching, startSearching] = useTransition();
-  const {navigate} = useRouter();
-  return (
-    <form className="search" role="search" onSubmit={(e) => e.preventDefault()}>
-      <label className="offscreen" htmlFor="sidebar-search-input">
-        Search for a note by title
-      </label>
-      <input
-        id="sidebar-search-input"
-        placeholder="Search"
-        value={text}
-        onChange={(e) => {
+  return jsx2("form", {
+    className: "search",
+    role: "search",
+    onSubmit: (e) => e.preventDefault(),
+    children: [
+      jsx2("label", {
+        className: "offscreen",
+        htmlFor: "sidebar-search-input",
+        children: "Search for a note by title"
+      }),
+      jsx2("input", {
+        id: "sidebar-search-input",
+        placeholder: "Search",
+        value: text,
+        onChange: (e) => {
           const newText = e.target.value;
           setText(newText);
           startSearching(() => {
-            navigate({
-              searchText: newText,
-            });
+            const url = new URL(window.location);
+            url.searchParams.set("q", newText);
+            __rscNav(url.toString());
           });
-        }}
-      />
-      <Spinner active={isSearching} />
-    </form>
-  );
+        }
+      }),
+      jsx2(Spinner, {
+        active: isSearching
+      })
+    ]
+  });
 }
+export {
+  SearchField as default
+};

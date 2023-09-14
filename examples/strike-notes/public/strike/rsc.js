@@ -1,6 +1,7 @@
 // @ts-check
 import React from "react";
 import { jsx, jsxs } from "react/jsx-runtime";
+import { StrikeIsland } from "./islands.js";
 
 export function RscComponent({ initialPage, url, routerKey }) {
   if (initialPage) {

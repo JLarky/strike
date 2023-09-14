@@ -137,10 +137,20 @@ func App() Component {
 }
 
 func SearchField() Component {
-	return H("input")
+	return Island("SearchField", nil,
+		H("form", Props{"class": "search", "role": "search"},
+			H("label", Props{"class": "offscreen"}),
+			H("input", Props{"placeholder": "Search", "disabled": "disabled"}),
+		),
+	)
 }
 
-func EditButton(rest ...any) Component {
-	fmt.Println("EditButton", rest)
-	return H("button")
+func EditButton(noteId *string, title string) Component {
+	return Island("EditButton", Props{"noteId": noteId, "title": title},
+		H("button", Props{"class": "edit-button edit-button--solid", "role": "menuitem"}, "New"),
+	)
+}
+
+func Island(componentName string, props Props, children ...any) Component {
+	return H("strike-island", props, Props{"component-export": componentName}, children)
 }

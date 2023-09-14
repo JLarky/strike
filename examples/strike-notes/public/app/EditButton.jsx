@@ -6,32 +6,28 @@
  *
  */
 
-'use client';
+"use client";
 
-import {useTransition} from 'react';
-import {useRouter} from './framework/router';
+import { useTransition } from "react";
 
-export default function EditButton({noteId, children}) {
+export default function EditButton({ noteId, title, children }) {
   const [isPending, startTransition] = useTransition();
-  const {navigate} = useRouter();
   const isDraft = noteId == null;
   return (
     <button
       className={[
-        'edit-button',
-        isDraft ? 'edit-button--solid' : 'edit-button--outline',
-      ].join(' ')}
+        "edit-button",
+        isDraft ? "edit-button--solid" : "edit-button--outline",
+      ].join(" ")}
       disabled={isPending}
       onClick={() => {
         startTransition(() => {
-          navigate({
-            selectedId: noteId,
-            isEditing: true,
-          });
+          __rscNav(isDraft ? "/edit" : `/edit/${noteId}`);
         });
       }}
-      role="menuitem">
-      {children}
+      role="menuitem"
+    >
+      {title}
     </button>
   );
 }
