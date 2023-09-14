@@ -90,6 +90,11 @@ func Page(url string) Component {
 			H("meta", Props{"name": "viewport", "content": "width=device-width, initial-scale=1"}),
 			H("link", Props{"rel": "stylesheet", "href": "/static/style.css"}),
 			H("title", "React Notes"),
+			H("style", Props{"type": "text/css"}, []template.HTML{`
+			strike-island {
+				display: contents;
+			}
+			`}),
 		),
 		H("body",
 			App(),

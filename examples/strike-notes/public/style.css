@@ -291,7 +291,7 @@ ul.notes-list {
   display: flex;
   justify-content: space-between;
 }
-.sidebar-menu > .search {
+.sidebar-menu .search {
   position: relative;
   flex-grow: 1;
 }
