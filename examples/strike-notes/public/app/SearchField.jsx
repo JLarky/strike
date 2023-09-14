@@ -14,7 +14,10 @@ import { useState, useTransition } from "react";
 import Spinner from "./Spinner";
 
 export default function SearchField() {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(() => {
+    const q = new URLSearchParams(window.location.search).get("q");
+    return q || "";
+  });
   const [isSearching, startSearching] = useTransition();
   // const { navigate } = useRouter();
   return (

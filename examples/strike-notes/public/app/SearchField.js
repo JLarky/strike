@@ -18,7 +18,10 @@ import {
 jsx as jsx2
 } from "react/jsx-runtime";
 function SearchField() {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(() => {
+    const q = new URLSearchParams(window.location.search).get("q");
+    return q || "";
+  });
   const [isSearching, startSearching] = useTransition();
   return jsx2("form", {
     className: "search",

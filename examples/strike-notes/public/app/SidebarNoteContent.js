@@ -39,7 +39,8 @@ function SidebarNoteContent({
         },
         onClick: () => {
           startTransition(() => {
-            __rscNav(`/${id}`);
+            const q = new URLSearchParams(window.location.search).get("q");
+            __rscNav(`/${id}` + (q ? `?q=${encodeURIComponent(q)}` : ""));
           });
         },
         children: "Open note for preview"
