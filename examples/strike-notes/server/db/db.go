@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"io"
+	"math"
 	"os"
 	"strings"
 	"time"
@@ -28,6 +29,7 @@ func SearchNotes(q string) ([]Note, error) {
 			out = append(out, note)
 		}
 	}
+	time.Sleep(time.Duration(math.Min(20, math.Pow(2, float64(len(q))))) * 100 * time.Millisecond)
 	return out, nil
 }
 
