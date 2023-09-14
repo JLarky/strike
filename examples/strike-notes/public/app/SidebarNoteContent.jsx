@@ -6,16 +6,19 @@
  *
  */
 
-'use client';
+"use client";
 
-import {useState, useRef, useEffect, useTransition} from 'react';
-import {useRouter} from './framework/router';
+import { useState, useRef, useEffect, useTransition } from "react";
 
-export default function SidebarNoteContent({id, title, children, expandedChildren}) {
-  const {location, navigate} = useRouter();
+export default function SidebarNoteContent({
+  id,
+  title,
+  children,
+  expandedChildren,
+}) {
   const [isPending, startTransition] = useTransition();
   const [isExpanded, setIsExpanded] = useState(false);
-  const isActive = id === location.selectedId;
+  const isActive = window.location.pathname === "/" + id;
 
   // Animate after title is edited.
   const itemRef = useRef(null);
@@ -23,7 +26,7 @@ export default function SidebarNoteContent({id, title, children, expandedChildre
   useEffect(() => {
     if (title !== prevTitleRef.current) {
       prevTitleRef.current = title;
-      itemRef.current.classList.add('flash');
+      itemRef.current.classList.add("flash");
     }
   }, [title]);
 
@@ -31,33 +34,32 @@ export default function SidebarNoteContent({id, title, children, expandedChildre
     <div
       ref={itemRef}
       onAnimationEnd={() => {
-        itemRef.current.classList.remove('flash');
+        itemRef.current.classList.remove("flash");
       }}
       className={[
-        'sidebar-note-list-item',
-        isExpanded ? 'note-expanded' : '',
-      ].join(' ')}>
-      {children}
+        "sidebar-note-list-item",
+        isExpanded ? "note-expanded" : "",
+      ].join(" ")}
+    >
+      {children[0].props.children}
       <button
         className="sidebar-note-open"
         style={{
           backgroundColor: isPending
-            ? 'var(--gray-80)'
+            ? "var(--gray-80)"
             : isActive
-            ? 'var(--tertiary-blue)'
-            : '',
+            ? "var(--tertiary-blue)"
+            : "",
           border: isActive
-            ? '1px solid var(--primary-border)'
-            : '1px solid transparent',
+            ? "1px solid var(--primary-border)"
+            : "1px solid transparent",
         }}
         onClick={() => {
           startTransition(() => {
-            navigate({
-              selectedId: id,
-              isEditing: false,
-            });
+            __rscNav(`/${id}`);
           });
-        }}>
+        }}
+      >
         Open note for preview
       </button>
       <button
@@ -65,19 +67,25 @@ export default function SidebarNoteContent({id, title, children, expandedChildre
         onClick={(e) => {
           e.stopPropagation();
           setIsExpanded(!isExpanded);
-        }}>
+        }}
+      >
         {isExpanded ? (
           <img
-            src="chevron-down.svg"
+            src="/static/chevron-down.svg"
             width="10px"
             height="10px"
             alt="Collapse"
           />
         ) : (
-          <img src="chevron-up.svg" width="10px" height="10px" alt="Expand" />
+          <img
+            src="/static/chevron-up.svg"
+            width="10px"
+            height="10px"
+            alt="Expand"
+          />
         )}
       </button>
-      {isExpanded && expandedChildren}
+      {isExpanded && children[1].props.children}
     </div>
   );
 }

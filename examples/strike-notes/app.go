@@ -93,6 +93,9 @@ func Page(url *url.URL) Component {
 			H("link", Props{"rel": "stylesheet", "href": "/static/style.css"}),
 			H("title", "React Notes"),
 			H("style", Props{"type": "text/css"}, []template.HTML{`
+			strike-slot {
+				display: none;
+			}
 			strike-island {
 				display: contents;
 			}
@@ -187,10 +190,16 @@ func SidebarNote(note db.Note) Component {
 		lastEdited = note.UpdatedAt.Format("1/_2/06")
 	}
 
-	return H("div", Props{"class": "sidebar-note-list-item"},
-		H("header", Props{"class": "sidebar-note-header"},
-			H("strong", note.Title),
-			H("small", lastEdited),
+	return Island("SidebarNoteContent", Props{"id": note.Id, "title": note.Title},
+		H("div", Props{"class": "sidebar-note-list-item"},
+			H("header", Props{"class": "sidebar-note-header"},
+				H("strong", note.Title),
+				H("small", lastEdited),
+			),
+			H("button", Props{"class": "sidebar-note-open"}),
+		),
+		H("strike-slot",
+			H("p", Props{"class": "sidebar-note-excerpt"}, H("i", "(No content)")),
 		),
 	)
 }

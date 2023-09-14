@@ -4,6 +4,7 @@ import { jsx, jsxs } from "react/jsx-runtime";
 
 export { default as EditButton } from "../app/EditButton.js";
 export { default as SearchField } from "../app/SearchField.js";
+export { default as SidebarNoteContent } from "../app/SidebarNoteContent.js";
 
 export function StrikeIsland({ children }) {
   const { "component-export": exportName } = children.props;
