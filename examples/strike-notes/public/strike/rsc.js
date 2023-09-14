@@ -35,9 +35,13 @@ export function jsonToJSX(x) {
     children = x.children.map(jsonToJSX);
   }
   const props = {};
+  let key = undefined;
   props.children = children;
   for (const [k, v] of Object.entries(x.props || {})) {
-    if (k === "class") {
+    if (k === "key") {
+      key = v;
+      delete x.props.key;
+    } else if (k === "class") {
       props.className = v;
     } else if (x.tag_type === "meta" && k === "charset") {
       props.charSet = v;
@@ -45,7 +49,7 @@ export function jsonToJSX(x) {
       props[k] = v;
     }
   }
-  const node = jsxs(x.tag_type, props);
+  const node = jsxs(x.tag_type, props, key);
 
   if (x.tag_type === "strike-island") {
     return jsx(StrikeIsland, { children: node });

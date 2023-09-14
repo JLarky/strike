@@ -19,6 +19,10 @@ func H(tag any, rest ...any) Component {
 			for _, v := range item_type {
 				children = append(children, v)
 			}
+		case []Component:
+			for _, v := range item_type {
+				children = append(children, v)
+			}
 		case []any:
 			children = append(children, item_type...)
 		case Props:

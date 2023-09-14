@@ -6,8 +6,10 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 
+	"github.com/JLarky/strike-notes/server/db"
 	. "github.com/JLarky/strike/pkg/h"
 	"github.com/JLarky/strike/pkg/strike"
 )
@@ -23,7 +25,7 @@ func main() {
 			}
 		}
 
-		page := Page(r.URL.Path)
+		page := Page(r.URL)
 
 		rsc := r.Header.Get("RSC")
 		if rsc == "1" {
@@ -75,7 +77,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func Page(url string) Component {
+func Page(url *url.URL) Component {
 	// time.Sleep(1000 * time.Millisecond)
 	fmt.Println("Page", url)
 	nav := H("nav",
@@ -97,8 +99,8 @@ func Page(url string) Component {
 			`}),
 		),
 		H("body",
-			App(),
-			H("div", Props{"id": "root"}, nav, "Loading... "+url),
+			App(url),
+			H("div", Props{"id": "root"}, nav, "Loading... "+url.Path),
 			H("script", Props{"type": "importmap"}, []template.HTML{`
 			{
 				"imports": {
@@ -113,7 +115,7 @@ func Page(url string) Component {
 	)
 }
 
-func App() Component {
+func App(url *url.URL) Component {
 	return H("div", Props{"class": "main"},
 		H("section", Props{"class": "col sidebar"},
 			H("section", Props{"class": "sidebar-header"},
@@ -124,7 +126,7 @@ func App() Component {
 				SearchField(),
 				EditButton(nil, "New"),
 			),
-			H("nav"), // <Suspense fallback={<NoteListSkeleton />}>
+			H("nav", NodeList(url)), // <Suspense fallback={<NoteListSkeleton />}>
 			// 	<NoteList searchText={searchText} />
 			// </Suspense>
 
@@ -148,6 +150,48 @@ func SearchField() Component {
 func EditButton(noteId *string, title string) Component {
 	return Island("EditButton", Props{"noteId": noteId, "title": title},
 		H("button", Props{"class": "edit-button edit-button--solid", "role": "menuitem"}, "New"),
+	)
+}
+
+func NodeList(url *url.URL) Component {
+	q := url.Query().Get("q")
+	notes, err := db.SearchNotes(q)
+	if err != nil {
+		panic(fmt.Sprintf("Error searching notes: %v", err))
+	}
+	if (len(notes)) == 0 {
+		text := "No notes created yet!"
+		if q != "" {
+			text = fmt.Sprintf(`Couldn't find any notes titled "%s".`, q)
+		}
+		return H("div", Props{"class": "notes-empty"}, text)
+	}
+	noteComponents := make([]Component, len(notes))
+	for i, note := range notes {
+		noteComponents[i] = H("li", Props{"key": note.Id}, SidebarNote(note))
+	}
+	return H("ul", Props{"class": "notes-list"}, noteComponents)
+}
+
+func SidebarNote(note db.Note) Component {
+	isToday := func(t time.Time) bool {
+		now := time.Now()
+		return t.Year() == now.Year() && t.Month() == now.Month() && t.Day() == now.Day()
+	}
+
+	lastEdited := ""
+
+	if isToday(note.UpdatedAt) {
+		lastEdited = note.UpdatedAt.Format("3:04 PM")
+	} else {
+		lastEdited = note.UpdatedAt.Format("1/_2/06")
+	}
+
+	return H("div", Props{"class": "sidebar-note-list-item"},
+		H("header", Props{"class": "sidebar-note-header"},
+			H("strong", note.Title),
+			H("small", lastEdited),
+		),
 	)
 }
 
