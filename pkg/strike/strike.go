@@ -37,6 +37,8 @@ func RenderToString(wr io.Writer, comp Component) error {
 			} else {
 				strValue = *v
 			}
+		case <-chan string:
+			strValue = <-v
 		default:
 			return fmt.Errorf("cannot convert prop %s (%v %T) to string", prop, value, value)
 		}
@@ -53,6 +55,11 @@ func RenderToString(wr io.Writer, comp Component) error {
 			switch childComp := child.(type) {
 			case Component:
 				err = RenderToString(wr, childComp)
+				if err != nil {
+					return err
+				}
+			case <-chan Component:
+				err = RenderToString(wr, <-childComp)
 				if err != nil {
 					return err
 				}
