@@ -5,17 +5,32 @@ import (
 	"html"
 	"html/template"
 	"io"
+
+	"github.com/JLarky/strike/pkg/h"
+	"github.com/JLarky/strike/pkg/suspense"
 )
 
-type Component struct {
-	Tag_type string `json:"tag_type"`
-	Props    Props  `json:"props"`
-	Children []any  `json:"children"`
+type Component = h.Component
+
+type Island struct {
+	Component
+	Fallback      Component `json:"fallback"`
+	ComopnentName string    `json:"componentName"`
+	Props         Props     `json:"props"`
 }
 
-type Props map[string]any
+type Props = h.Props
 
 func RenderToString(wr io.Writer, comp Component) error {
+	if suspense.IsSuspense(comp) {
+		switch fallback := comp.Props["fallback"].(type) {
+		case Component:
+			return RenderToString(wr, fallback)
+		default:
+			fmt.Printf("Suspense component %v is missing fallback prop (got %v instead)", comp, fallback)
+			return nil
+		}
+	}
 	wr.Write([]byte("<" + comp.Tag_type))
 	for prop, value := range comp.Props {
 		// Perform a type assertion to convert `value` to a string
@@ -39,6 +54,8 @@ func RenderToString(wr io.Writer, comp Component) error {
 			}
 		case <-chan string:
 			strValue = <-v
+		case []any:
+			continue
 		default:
 			return fmt.Errorf("cannot convert prop %s (%v %T) to string", prop, value, value)
 		}
@@ -50,23 +67,38 @@ func RenderToString(wr io.Writer, comp Component) error {
 	if err != nil {
 		return err
 	}
-	for _, child := range comp.Children {
-		if child != nil {
-			switch childComp := child.(type) {
-			case Component:
-				err = RenderToString(wr, childComp)
-				if err != nil {
-					return err
-				}
-			case <-chan Component:
-				err = RenderToString(wr, <-childComp)
-				if err != nil {
-					return err
-				}
-			default:
-				err = childTpl.Execute(wr, child)
-				if err != nil {
-					return err
+	if (comp.Props["children"]) != nil {
+		children := comp.Props["children"].([]any)
+		for _, child := range children {
+			if child != nil {
+				switch childComp := child.(type) {
+				case Component:
+					err = RenderToString(wr, childComp)
+					if err != nil {
+						return err
+					}
+				case func() Component:
+					err = RenderToString(wr, childComp())
+					if err != nil {
+						return err
+					}
+				case <-chan Component:
+					err = RenderToString(wr, <-childComp)
+					if err != nil {
+						return err
+					}
+				case string:
+					err = childTpl.Execute(wr, child)
+					if err != nil {
+						return err
+					}
+				case template.HTML:
+					err = childTpl.Execute(wr, child)
+					if err != nil {
+						return err
+					}
+				default:
+					return fmt.Errorf("cannot convert prop (%v %T) to string for %v", childComp, childComp, comp)
 				}
 			}
 		}
@@ -110,7 +142,8 @@ func RenderToStream(wr io.Writer, comp Component) error {
 	if err != nil {
 		return err
 	}
-	for _, child := range comp.Children {
+	children := comp.Props["children"].([]any)
+	for _, child := range children {
 		if child != nil {
 			switch childComp := child.(type) {
 			case Component:

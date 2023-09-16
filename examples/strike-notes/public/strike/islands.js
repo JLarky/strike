@@ -6,8 +6,8 @@ export { default as EditButton } from "../app/EditButton.js";
 export { default as SearchField } from "../app/SearchField.js";
 export { default as SidebarNoteContent } from "../app/SidebarNoteContent.js";
 
-export function StrikeIsland({ children }) {
-  const { "component-export": exportName } = children.props;
+export function StrikeIsland(props) {
+  const { "component-export": exportName } = props;
   if (!exportName) {
     throw new Error(`strike-island is missing component-export prop`);
   }
@@ -20,10 +20,7 @@ export function StrikeIsland({ children }) {
     setIsMounted(true);
   }, []);
   if (isMounted) {
-    return jsx("strike-island", {
-      ...children.props,
-      children: jsx(comp, children.props),
-    });
+    return jsx("strike-island", { ...props, children: jsx(comp, props) });
   }
-  return children;
+  return jsx("strike-island", props);
 }

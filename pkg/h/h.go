@@ -1,14 +1,25 @@
 package h
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
-
-	"github.com/JLarky/strike/pkg/strike"
 )
 
-type Component = strike.Component
-type Props = strike.Props
+type Component struct {
+	Tag_type string `json:"tag_type"`
+	Props    Props  `json:"props"`
+}
+
+func (c Component) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"$strike": "component",
+		"$type":   c.Tag_type,
+		"props":   c.Props,
+	})
+}
+
+type Props map[string]any
 
 func H(tag any, rest ...any) Component {
 	props := make(map[string]any)
@@ -34,10 +45,13 @@ func H(tag any, rest ...any) Component {
 		}
 	}
 
+	if len(children) > 0 {
+		props["children"] = children
+	}
+
 	comp := Component{
 		Tag_type: "",
 		Props:    props,
-		Children: children,
 	}
 
 	switch tag_type := tag.(type) {

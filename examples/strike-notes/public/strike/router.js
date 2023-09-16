@@ -23,7 +23,7 @@ export function Router() {
 
 /** @type {import("./router").createRouterState} */
 function createRouterState(path) {
-  const jsonData = JSON.parse(window.__rsc[0]);
+  const jsonData = window.__rsc[0];
   const page = jsonToJSX(jsonData);
   return { path, isInitial: true, initialPage: page, key: "initial" };
 }

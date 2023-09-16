@@ -12,6 +12,7 @@ import (
 	"github.com/JLarky/strike-notes/server/db"
 	. "github.com/JLarky/strike/pkg/h"
 	"github.com/JLarky/strike/pkg/strike"
+	"github.com/JLarky/strike/pkg/suspense"
 )
 
 func main() {
@@ -21,7 +22,7 @@ func main() {
 		flush := func() {
 			if f, ok := w.(http.Flusher); ok {
 				f.Flush()
-				time.Sleep(1000 * time.Millisecond)
+				time.Sleep(1 * time.Millisecond)
 			}
 		}
 
@@ -29,7 +30,7 @@ func main() {
 
 		rsc := r.Header.Get("RSC")
 		if rsc == "1" {
-			jsonData, err := json.Marshal(page)
+			jsonData, err := json.MarshalIndent(page, "", "  ")
 			if err != nil {
 				fmt.Printf("Error serializing data: %v", err)
 				return
@@ -50,7 +51,7 @@ func main() {
 		}
 		flush()
 		// w.Write([]byte("Hello, World!"))
-		jsonData, err := json.Marshal(page)
+		jsonData, err := json.MarshalIndent(page, "", "  ")
 
 		if err != nil {
 			fmt.Printf("Error serializing data: %v", err)
@@ -71,6 +72,12 @@ func main() {
 		if err != nil {
 			fmt.Printf("Error parsing template: %v", err)
 			return
+		}
+
+		{ // debug JSX
+			w.Write([]byte("\n<template>"))
+			w.Write(jsonData)
+			w.Write([]byte("</template>"))
 		}
 	})
 	fmt.Println("Server started at http://localhost:8080")
@@ -104,7 +111,14 @@ func Page(url *url.URL) Component {
 		H("body",
 			App(url),
 			H("div", Props{"id": "root"}, nav, "Loading... "+url.Path),
-			H("script", Props{"type": "importmap"}, []template.HTML{`
+			bootstrap(),
+		),
+	)
+}
+
+func bootstrap() Component {
+	return H("div",
+		H("script", Props{"type": "importmap"}, []template.HTML{`
 			{
 				"imports": {
 					"react": "https://esm.sh/react@canary?dev",
@@ -113,9 +127,23 @@ func Page(url *url.URL) Component {
 					"react-error-boundary": "https://esm.sh/react-error-boundary"
 				}
 			}`}),
-			H("script", Props{"src": "/static/strike/bootstrap.js", "type": "module"}),
-		),
+		H("script", Props{"src": "/static/strike/bootstrap.js", "type": "module"}),
 	)
+}
+
+func Wait(c string, ms int) string {
+	time.Sleep(time.Duration(ms) * time.Millisecond)
+	return c
+}
+
+func App2(url *url.URL) Component {
+	a := H("div", "Hello", H("div", "World"))
+	return a
+	// return H(suspense.Suspense, Props{"class": "main", "fallback": a}, Wait("hello", 1000))
+	// return H("nav", H(Suspense,
+	// 	Props{"fallback": NoteListSkeleton()},
+	// 	NodeList(url),
+	// ))
 }
 
 func App(url *url.URL) Component {
@@ -129,7 +157,8 @@ func App(url *url.URL) Component {
 				SearchField(),
 				EditButton(nil, "New"),
 			),
-			H("nav", NodeList(url)), // <Suspense fallback={<NoteListSkeleton />}>
+			H("nav", H(suspense.Suspense, Props{"fallback": noteListSkeleton()})), // func() Component { return NodeList(url) },
+			// <Suspense fallback={<NoteListSkeleton />}>
 			// 	<NoteList searchText={searchText} />
 			// </Suspense>
 
@@ -152,8 +181,22 @@ func SearchField() Component {
 
 func EditButton(noteId *string, title string) Component {
 	return Island("EditButton", Props{"noteId": noteId, "title": title},
-		H("button", Props{"class": "edit-button edit-button--solid", "role": "menuitem"}, "New"),
+		H("button", Props{"class": "edit-button edit-button--solid", "role": "menuitem"}, title),
 	)
+}
+
+func noteListSkeleton() Component {
+	return H("div", H("ul", Props{"class": "notes-list skeleton-container"},
+		H("li", Props{"class": "v-stack"},
+			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height: 5em"}),
+		),
+		H("li", Props{"class": "v-stack"},
+			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height: 5em"}),
+		),
+		H("li", Props{"class": "v-stack"},
+			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height: 5em"}),
+		),
+	))
 }
 
 func NodeList(url *url.URL) Component {
