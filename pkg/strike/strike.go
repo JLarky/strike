@@ -108,6 +108,15 @@ func RenderToString(wr io.Writer, comp Component) error {
 }
 
 func RenderToStream(wr io.Writer, comp Component) error {
+	if suspense.IsSuspense(comp) {
+		switch fallback := comp.Props["fallback"].(type) {
+		case Component:
+			return RenderToString(wr, fallback)
+		default:
+			fmt.Printf("Suspense component %v is missing fallback prop (got %v instead)", comp, fallback)
+			return nil
+		}
+	}
 	wr.Write([]byte("<" + comp.Tag_type))
 	for prop, value := range comp.Props {
 		// Perform a type assertion to convert `value` to a string
@@ -131,6 +140,8 @@ func RenderToStream(wr io.Writer, comp Component) error {
 			}
 		case <-chan string:
 			strValue = <-v
+		case []any:
+			continue
 		default:
 			return fmt.Errorf("cannot convert prop %s (%v %T) to string", prop, value, value)
 		}
@@ -142,24 +153,38 @@ func RenderToStream(wr io.Writer, comp Component) error {
 	if err != nil {
 		return err
 	}
-	children := comp.Props["children"].([]any)
-	for _, child := range children {
-		if child != nil {
-			switch childComp := child.(type) {
-			case Component:
-				err = RenderToString(wr, childComp)
-				if err != nil {
-					return err
-				}
-			case <-chan Component:
-				err = RenderToString(wr, <-childComp)
-				if err != nil {
-					return err
-				}
-			default:
-				err = childTpl.Execute(wr, child)
-				if err != nil {
-					return err
+	if (comp.Props["children"]) != nil {
+		children := comp.Props["children"].([]any)
+		for _, child := range children {
+			if child != nil {
+				switch childComp := child.(type) {
+				case Component:
+					err = RenderToString(wr, childComp)
+					if err != nil {
+						return err
+					}
+				case func() Component:
+					err = RenderToString(wr, childComp())
+					if err != nil {
+						return err
+					}
+				case <-chan Component:
+					err = RenderToString(wr, <-childComp)
+					if err != nil {
+						return err
+					}
+				case string:
+					err = childTpl.Execute(wr, child)
+					if err != nil {
+						return err
+					}
+				case template.HTML:
+					err = childTpl.Execute(wr, child)
+					if err != nil {
+						return err
+					}
+				default:
+					return fmt.Errorf("cannot convert prop (%v %T) to string for %v", childComp, childComp, comp)
 				}
 			}
 		}
