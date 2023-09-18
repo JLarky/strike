@@ -4,7 +4,6 @@ export type RouterState = {
   key: string;
   path: string;
   isInitial: boolean;
-  initialPage: any;
 };
 
 export function createRouterState(path: string): RouterState;

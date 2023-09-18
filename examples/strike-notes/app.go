@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html/template"
 	"log"
-	"math/rand"
 	"net/http"
 	"net/url"
 	"time"
@@ -27,6 +26,7 @@ func main() {
 		ctx := r.Context()
 
 		ctx, taskChannel, wg := promise.WithContext(ctx)
+
 		fmt.Println("ctx", ctx)
 		flush := func() {
 			if f, ok := w.(http.Flusher); ok {
@@ -40,6 +40,11 @@ func main() {
 			App(r.URL, ctx),
 		)
 
+		go func() {
+			wg.Wait()
+			close(taskChannel)
+		}()
+
 		rsc := r.Header.Get("RSC")
 		if rsc == "1" {
 			jsonData, err := json.MarshalIndent(page, "", "  ")
@@ -50,6 +55,28 @@ func main() {
 
 			w.Header().Set("Content-Type", "text/x-component; charset=utf-8")
 			w.Write(jsonData)
+			w.Write([]byte("\n"))
+
+			{
+				for task := range taskChannel {
+					fmt.Println(task.Result)
+					w.Write([]byte("\n"))
+					newEncoder := json.NewEncoder(w)
+					newEncoder.SetEscapeHTML(false) // TODO: check if this is safe
+					err := newEncoder.Encode(
+						map[string]any{
+							"$strike": "promise-result",
+							"id":      task.ID,
+							"result":  task.Result,
+						})
+					if err != nil {
+						fmt.Printf("Error encoding task: %v", err)
+						return
+					}
+					flush()
+				}
+			}
+
 			return
 		}
 
@@ -96,41 +123,26 @@ func main() {
 			w.Write([]byte("</template>"))
 		}
 
-		go func() {
-			time.Sleep(100 * time.Millisecond)
-			close(s.DoneChan)
-		}()
-
-		go func() {
-			for i := 0; i < 5; i++ {
-				wg.Add(1)
-
-				go func(id int) {
-					defer wg.Done()
-
-					// Simulating work.
-					time.Sleep(time.Millisecond * time.Duration(rand.Intn(3000)))
-					taskChannel <- promise.Task{
-						ID:     id,
-						Result: fmt.Sprintf("Task %d completed", id),
-					}
-				}(i)
-			}
-			wg.Wait()
-			close(taskChannel)
-		}()
-
 		{
 			for task := range taskChannel {
 				fmt.Println(task.Result)
-				w.Write([]byte("\n<script>console.log('"))
-				w.Write([]byte(task.Result))
-				w.Write([]byte("')</script>"))
+				w.Write([]byte("\n<script>__rsc.push(`"))
+				newEncoder := json.NewEncoder(w)
+				newEncoder.SetEscapeHTML(false) // TODO: check if this is safe
+				err := newEncoder.Encode(
+					map[string]any{
+						"$strike": "promise-result",
+						"id":      task.ID,
+						"result":  task.Result,
+					})
+				if err != nil {
+					fmt.Printf("Error encoding task: %v", err)
+					return
+				}
+				w.Write([]byte("`)</script>"))
 				flush()
 			}
 		}
-
-		<-s.Done()
 	})
 	fmt.Println("Server started at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -214,10 +226,7 @@ func App(url *url.URL, ctx context.Context) Component {
 				async.Async(
 					ctx,
 					func() Component {
-						c := NodeList(url)
-						fmt.Println("c", c)
-						// panic(123)
-						return c
+						return NodeList(url)
 					},
 				),
 			)),
@@ -256,13 +265,13 @@ func editButton(noteId *string, title string) Component {
 func noteListSkeleton() Component {
 	return H("div", H("ul", Props{"class": "notes-list skeleton-container"},
 		H("li", Props{"class": "v-stack"},
-			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height:5em"}),
+			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height:84px"}),
 		),
 		H("li", Props{"class": "v-stack"},
-			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height:5em"}),
+			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height:84px"}),
 		),
 		H("li", Props{"class": "v-stack"},
-			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height:5em"}),
+			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height:84px"}),
 		),
 	))
 }

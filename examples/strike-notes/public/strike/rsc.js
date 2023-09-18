@@ -21,23 +21,61 @@ const fetchClientJSX = React.cache(async function fetchClientJSX(
     headers: { RSC: "1" },
   });
   const clientJSXString = await response.text();
-  const clientJSX = jsonToJSX(clientJSXString);
-  console.log("clientJSX", clientJSX);
-  return clientJSX;
+  const chunks = clientJSXString.split("\n\n");
+  const [root, ...rest] = chunks;
+  const ctx = { promises: new Map() };
+  chunks.map((x) => jsonToJSX(ctx, x));
+  return jsonToJSX(ctx, root);
 });
 
-export function jsonToJSX(x) {
-  const ctx = {};
+export function jsonToJSX(ctx, x) {
   const parsed = JSON.parse(x, function fromJSON(key, value) {
     return parseModelString(ctx, this, key, value);
   });
-  // console.log("str", parsed);
+  console.log("str", parsed, ctx);
   return parsed;
+}
+
+/** @type {import("./rsc").createRemotePromise}*/
+function createRemotePromise(id) {
+  /** @type {(value: any) => void} */
+  let resolve = () => {};
+  let reject = () => {};
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { id, promise, resolve, reject };
+}
+
+/** @type {import("./rsc").remotePromiseFromCtx}*/
+function remotePromiseFromCtx(ctx, id) {
+  let remote = ctx.promises.get(id);
+  if (!remote) {
+    remote = createRemotePromise(id);
+    ctx.promises.set(id, remote);
+  }
+  return remote;
+}
+
+/** @type {import("./rsc").promisify}*/
+function promisify(obj, promise) {
+  obj.__proto__ = promise.__proto__;
+  obj.promise = promise;
+  obj.then = promise.then.bind(promise);
+  obj.catch = promise.catch.bind(promise);
+  obj.finally = promise.finally.bind(promise);
 }
 
 /** @type {import("./rsc").parseModelString} */
 function parseModelString(ctx, parent, key, value) {
-  if (key === "$strike" && value === "component") {
+  if (key === "$strike" && value === "promise-result") {
+    const remote = remotePromiseFromCtx(ctx, parent.id);
+    remote.resolve(parent.result);
+  } else if (key === "$strike" && value === "promise") {
+    const remote = remotePromiseFromCtx(ctx, parent.id);
+    promisify(parent, remote.promise);
+  } else if (key === "$strike" && value === "component") {
     parent["$$typeof"] = Symbol.for("react.element");
     parent.type = parent["$type"];
     delete parent["$type"];
@@ -69,8 +107,7 @@ function parseModelString(ctx, parent, key, value) {
     }
     if (parent.type === "strike-suspense") {
       parent.type = StrikeSuspense;
-    }
-    if (parent.type === "strike-island") {
+    } else if (parent.type === "strike-island") {
       parent.type = StrikeIsland;
     }
     return undefined;

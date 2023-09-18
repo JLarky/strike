@@ -4,22 +4,9 @@ import { hydrateRoot } from "react-dom/client";
 import { jsx, jsxs } from "react/jsx-runtime";
 import { ErrorBoundary } from "react-error-boundary";
 
-function boot() {
-  React.startTransition(() => {
-    hydrateRoot(document, jsx(Root, {}));
-  });
-}
-
-if (typeof __rsc === "undefined") {
-  window.__rsc = {
-    push: function (x) {
-      window.__rsc = [x];
-      boot();
-    },
-  };
-} else {
-  boot();
-}
+React.startTransition(() => {
+  hydrateRoot(document, jsx(Root, {}));
+});
 
 function Root() {
   return jsx(ErrorBoundary, {

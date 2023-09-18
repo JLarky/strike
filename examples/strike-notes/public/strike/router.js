@@ -11,11 +11,11 @@ export function Router() {
   const [router, setRouter] = useState(() =>
     createRouterState(window.location.pathname)
   );
+  console.log("router", router);
   React.useEffect(() => {
     addNavigation(setRouter);
   }, []);
   return jsx(RscComponent, {
-    initialPage: router.initialPage,
     url: router.path,
     routerKey: router.key,
   });
@@ -23,14 +23,25 @@ export function Router() {
 
 /** @type {import("./router").createRouterState} */
 function createRouterState(path) {
-  const jsonData = window.__rsc[0];
-  const page = jsonToJSX(jsonData);
-  return { path, isInitial: true, initialPage: page, key: "initial" };
+  // compare this to https://github.com/vercel/next.js/blob/c6c38916882e419d9c4babdd9223339094fff1c3/packages/next-swc/crates/next-core/js/src/entry/app/hydrate.tsx#L130
+
+  // if (typeof __rsc === "undefined") {
+  //   window.__rsc = {
+  //     push: function (x) {
+  //       window.__rsc = [x];
+  //       boot();
+  //     },
+  //   };
+  // } else {
+  //   boot();
+  // }
+
+  return { path, isInitial: true, key: "initial" };
 }
 
 /** @type {import("./router").changeRouterState} */
 function changeRouterState(path, key) {
-  return { path, isInitial: false, key, initialPage: null };
+  return { path, isInitial: false, key };
 }
 
 /** @type {import("./router").addNavigation} */

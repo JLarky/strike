@@ -20,8 +20,8 @@ type Promise[T any] struct {
 type test string
 
 type Task struct {
-	ID     int
-	Result string
+	ID     string
+	Result any
 }
 
 type MyStuff struct {
@@ -92,12 +92,12 @@ func (p *Promise[T]) ResolveAsync(valueGen func() T) {
 		}()
 		fmt.Println("ResolveAsync before")
 		v := valueGen()
-		myStuff.TaskChannel <- Task{
-			ID:     11,
-			Result: fmt.Sprintf("New component %v", v),
-		}
 		fmt.Println("ResolveAsync", v)
 		p.Resolve(v)
+		myStuff.TaskChannel <- Task{
+			ID:     p.PromiseId,
+			Result: v,
+		}
 	}()
 }
 
