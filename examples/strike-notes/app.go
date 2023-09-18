@@ -55,11 +55,11 @@ func main() {
 
 			w.Header().Set("Content-Type", "text/x-component; charset=utf-8")
 			w.Write(jsonData)
-			w.Write([]byte("\n"))
+			w.Write([]byte("\n\n"))
+			flush()
 
 			{
 				for task := range taskChannel {
-					w.Write([]byte("\n"))
 					newEncoder := json.NewEncoder(w)
 					newEncoder.SetEscapeHTML(false) // TODO: check if this is safe
 					err := newEncoder.Encode(
@@ -72,6 +72,7 @@ func main() {
 						fmt.Printf("Error encoding task: %v", err)
 						return
 					}
+					w.Write([]byte("\n"))
 					flush()
 				}
 			}
@@ -188,22 +189,17 @@ func bootstrap() Component {
 	)
 }
 
-func Wait(c string, ms int) string {
-	time.Sleep(time.Duration(ms) * time.Millisecond)
-	return c
-}
-
-func App2(url *url.URL) Component {
-	a := H("div", "Hello", H("div", "World"))
-	return a
-	// return H(suspense.Suspense, Props{"class": "main", "fallback": a}, Wait("hello", 1000))
-	// return H("nav", H(Suspense,
-	// 	Props{"fallback": NoteListSkeleton()},
-	// 	NodeList(url),
-	// ))
-}
-
 func App(url *url.URL, ctx context.Context) Component {
+	p := promise.NewPromise[Component](ctx)
+	p.ResolveAsync(func() Component {
+		time.Sleep(1000 * time.Millisecond)
+		return H("div", "Hello, World!")
+	})
+	p2 := promise.NewPromise[Component](ctx)
+	p2.ResolveAsync(func() Component {
+		time.Sleep(2000 * time.Millisecond)
+		return H("div", "Hello, World!")
+	})
 	return H("div", Props{"class": "main"},
 		H("section", Props{"class": "col sidebar"},
 			H("section", Props{"class": "sidebar-header"},
@@ -215,24 +211,23 @@ func App(url *url.URL, ctx context.Context) Component {
 				editButton(nil, "New"),
 			),
 			H("nav", H(suspense.Suspense,
-				Props{"fallback": noteListSkeleton()},
+				Props{"fallback": noteListSkeleton(), "p": p, "p2": p2},
 				async.Async(
 					ctx,
 					func() Component {
-						return NodeList(url)
+						return nodeList(url)
 					},
 				),
 			)),
-			// func() Component { return NodeList(url) },
-			// <Suspense fallback={<NoteListSkeleton />}>
-			// 	<NoteList searchText={searchText} />
-			// </Suspense>
-
 		),
-		H("section", Props{"class": "col note-viewer"}), // 	<Suspense fallback={<NoteSkeleton isEditing={isEditing} />}>
-	// 	<Note selectedId={selectedId} isEditing={isEditing} />
-	// </Suspense>
-
+		H("section", Props{"class": "col note-viewer"},
+			H("div", Props{"class": "note--empty-state"},
+				H("span", Props{"class": "note-text--empty-state"}, "Click a note on the left to view something! 🥺"+url.String()),
+			),
+		),
+		// 	<Suspense fallback={<NoteSkeleton isEditing={isEditing} />}>
+		// 	<Note selectedId={selectedId} isEditing={isEditing} />
+		// </Suspense>
 	)
 }
 
@@ -269,7 +264,7 @@ func noteListSkeleton() Component {
 	))
 }
 
-func NodeList(url *url.URL) Component {
+func nodeList(url *url.URL) Component {
 	q := url.Query().Get("q")
 	notes, err := db.SearchNotes(q)
 	if err != nil {

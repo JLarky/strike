@@ -20,12 +20,18 @@ const fetchClientJSX = React.cache(async function fetchClientJSX(
   const response = await fetch(pathname, {
     headers: { RSC: "1" },
   });
-  const clientJSXString = await response.text();
-  const chunks = clientJSXString.split("\n\n");
-  const [root, ...rest] = chunks;
+
   const ctx = { promises: new Map() };
-  chunks.map((x) => jsonToJSX(ctx, x));
-  return jsonToJSX(ctx, root);
+
+  const chunks = readLines(response);
+
+  const root = await chunks.next().then((x) => jsonToJSX(ctx, x.value));
+  (async () => {
+    for await (const line of chunks) {
+      jsonToJSX(ctx, line);
+    }
+  })();
+  return root;
 });
 
 export function jsonToJSX(ctx, x) {
@@ -113,4 +119,39 @@ function parseModelString(ctx, parent, key, value) {
     return undefined;
   }
   return value;
+}
+
+async function* readLines(response) {
+  const reader = response.body?.getReader();
+  let accumulatedData = "";
+
+  if (reader) {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      // Convert Uint8Array to a string
+      accumulatedData += new TextDecoder().decode(value);
+
+      // Split by line breaks but keep the last, potentially incomplete line
+      let lastNewlineIndex = accumulatedData.lastIndexOf("\n\n");
+      console.log("accumulatedData", accumulatedData.length, lastNewlineIndex);
+      if (lastNewlineIndex !== -1) {
+        const lines = accumulatedData
+          .substring(0, lastNewlineIndex)
+          .split("\n\n");
+        for (const line of lines) {
+          yield line;
+        }
+
+        // Keep the remainder for the next iteration
+        accumulatedData = accumulatedData.substring(lastNewlineIndex + 2);
+      }
+    }
+
+    // If there's any remaining data after all chunks have been processed, yield it
+    if (accumulatedData) {
+      yield accumulatedData;
+    }
+  }
 }
