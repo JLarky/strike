@@ -59,7 +59,6 @@ func main() {
 
 			{
 				for task := range taskChannel {
-					fmt.Println(task.Result)
 					w.Write([]byte("\n"))
 					newEncoder := json.NewEncoder(w)
 					newEncoder.SetEscapeHTML(false) // TODO: check if this is safe
@@ -125,7 +124,6 @@ func main() {
 
 		{
 			for task := range taskChannel {
-				fmt.Println(task.Result)
 				w.Write([]byte("\n<script>__rsc.push(`"))
 				newEncoder := json.NewEncoder(w)
 				newEncoder.SetEscapeHTML(false) // TODO: check if this is safe
@@ -151,10 +149,6 @@ func main() {
 func Page(url *url.URL, children Component) Component {
 	// time.Sleep(1000 * time.Millisecond)
 	fmt.Println("Page", url)
-	nav := H("nav",
-		H("a", Props{"href": "/"}, "Home"), " ",
-		H("a", Props{"href": "/about"}, "About"),
-	)
 
 	return H("html", Props{"lang": "en"},
 		H("head",
@@ -174,7 +168,6 @@ func Page(url *url.URL, children Component) Component {
 		),
 		H("body",
 			children,
-			H("div", Props{"id": "root"}, nav, "Loading... "+url.Path),
 			bootstrap(),
 		),
 	)

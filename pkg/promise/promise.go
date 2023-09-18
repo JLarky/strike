@@ -79,8 +79,6 @@ func (p *Promise[T]) ResolveAsync(valueGen func() T) {
 
 	myStuff.WorkerGroup.Add(1)
 
-	fmt.Println("ResolveAsync", myStuff)
-
 	go func() {
 		defer myStuff.WorkerGroup.Done()
 		defer func() {
@@ -90,9 +88,7 @@ func (p *Promise[T]) ResolveAsync(valueGen func() T) {
 				fmt.Println("Recovered in ResolveAsync", r)
 			}
 		}()
-		fmt.Println("ResolveAsync before")
 		v := valueGen()
-		fmt.Println("ResolveAsync", v)
 		p.Resolve(v)
 		myStuff.TaskChannel <- Task{
 			ID:     p.PromiseId,

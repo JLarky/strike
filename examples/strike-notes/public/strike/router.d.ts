@@ -2,16 +2,16 @@ export function Router(): JSX.Element;
 
 export type RouterState = {
   key: string;
-  path: string;
+  href: string;
   isInitial: boolean;
 };
 
-export function createRouterState(path: string): RouterState;
-export function changeRouterState(path: string, key: string): RouterState;
+export function createRouterState(href: string): RouterState;
+export function changeRouterState(href: string, key: string): RouterState;
 
 export function addNavigation(setRouter: (router: RouterState) => void): void;
 jsxs;
-export function navigate(path: string): void;
+export function navigate(href: string): void;
 
 declare global {
   interface Window {

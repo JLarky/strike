@@ -9,20 +9,20 @@ const useState = React.useState;
 /** @type {import("./router").Router} */
 export function Router() {
   const [router, setRouter] = useState(() =>
-    createRouterState(window.location.pathname)
+    createRouterState(window.location.pathname + window.location.search)
   );
   console.log("router", router);
   React.useEffect(() => {
     addNavigation(setRouter);
   }, []);
   return jsx(RscComponent, {
-    url: router.path,
+    url: router.href,
     routerKey: router.key,
   });
 }
 
 /** @type {import("./router").createRouterState} */
-function createRouterState(path) {
+function createRouterState(href) {
   // compare this to https://github.com/vercel/next.js/blob/c6c38916882e419d9c4babdd9223339094fff1c3/packages/next-swc/crates/next-core/js/src/entry/app/hydrate.tsx#L130
 
   // if (typeof __rsc === "undefined") {
@@ -36,21 +36,21 @@ function createRouterState(path) {
   //   boot();
   // }
 
-  return { path, isInitial: true, key: "initial" };
+  return { href, isInitial: true, key: "initial" };
 }
 
 /** @type {import("./router").changeRouterState} */
-function changeRouterState(path, key) {
-  return { path, isInitial: false, key };
+function changeRouterState(href, key) {
+  return { href, isInitial: false, key };
 }
 
 /** @type {import("./router").addNavigation} */
 function addNavigation(setRouter) {
   /** @type {import("./router").navigate} */
-  function navigate(pathname) {
+  function navigate(href) {
     React.startTransition(() => {
       // invalidate the cache on every navigation
-      setRouter(changeRouterState(pathname, "" + Math.random()));
+      setRouter(changeRouterState(href, "" + Math.random()));
     });
   }
 
@@ -75,10 +75,10 @@ function addNavigation(setRouter) {
   );
 
   window.addEventListener("popstate", () => {
-    navigate(window.location.pathname);
+    navigate(window.location.pathname + window.location.search);
   });
-  window.__rscNav = (pathname) => {
-    window.history.pushState(null, "", pathname);
-    navigate(pathname);
+  window.__rscNav = (href) => {
+    window.history.pushState(null, "", href);
+    navigate(href);
   };
 }
