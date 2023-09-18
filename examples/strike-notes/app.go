@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"time"
@@ -24,7 +25,8 @@ func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("public"))))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		ctx = promise.WithContext(ctx)
+
+		ctx, taskChannel, wg := promise.WithContext(ctx)
 		fmt.Println("ctx", ctx)
 		flush := func() {
 			if f, ok := w.(http.Flusher); ok {
@@ -99,7 +101,35 @@ func main() {
 			close(s.DoneChan)
 		}()
 
-		time.Sleep(3000 * time.Millisecond)
+		go func() {
+			for i := 0; i < 5; i++ {
+				wg.Add(1)
+
+				go func(id int) {
+					defer wg.Done()
+
+					// Simulating work.
+					time.Sleep(time.Millisecond * time.Duration(rand.Intn(3000)))
+					taskChannel <- promise.Task{
+						ID:     id,
+						Result: fmt.Sprintf("Task %d completed", id),
+					}
+				}(i)
+			}
+			wg.Wait()
+			close(taskChannel)
+		}()
+
+		{
+			for task := range taskChannel {
+				fmt.Println(task.Result)
+				w.Write([]byte("\n<script>console.log('"))
+				w.Write([]byte(task.Result))
+				w.Write([]byte("')</script>"))
+				flush()
+			}
+		}
+
 		<-s.Done()
 	})
 	fmt.Println("Server started at http://localhost:8080")

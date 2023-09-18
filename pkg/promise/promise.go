@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"sync/atomic"
 )
 
@@ -18,8 +19,32 @@ type Promise[T any] struct {
 
 type test string
 
-func WithContext(ctx context.Context) context.Context {
-	return context.WithValue(ctx, test("promise"), "test123")
+type Task struct {
+	ID     int
+	Result string
+}
+
+type MyStuff struct {
+	TaskChannel chan Task
+	WorkerGroup *sync.WaitGroup
+}
+
+func WithContext(ctx context.Context) (context.Context, chan Task, *sync.WaitGroup) {
+
+	taskChannel := make(chan Task)
+	wg := sync.WaitGroup{}
+
+	myStuff := MyStuff{
+		TaskChannel: taskChannel,
+		WorkerGroup: &wg,
+	}
+
+	return context.WithValue(ctx, test("promise"), &myStuff), taskChannel, &wg
+}
+
+func FromContext(ctx context.Context) (*MyStuff, bool) {
+	stuff, ok := ctx.Value(test("promise")).(*MyStuff)
+	return stuff, ok
 }
 
 func NewPromise[T any](ctx context.Context) Promise[T] {
@@ -47,7 +72,17 @@ func (p Promise[T]) MarshalJSON() ([]byte, error) {
 }
 
 func (p *Promise[T]) ResolveAsync(valueGen func() T) {
+	myStuff, ok := FromContext(p.ctx)
+	if !ok {
+		panic("failed to get context")
+	}
+
+	myStuff.WorkerGroup.Add(1)
+
+	fmt.Println("ResolveAsync", myStuff)
+
 	go func() {
+		defer myStuff.WorkerGroup.Done()
 		defer func() {
 			if r := recover(); r != nil {
 				fmt.Printf("%T\n", p)
@@ -57,6 +92,10 @@ func (p *Promise[T]) ResolveAsync(valueGen func() T) {
 		}()
 		fmt.Println("ResolveAsync before")
 		v := valueGen()
+		myStuff.TaskChannel <- Task{
+			ID:     11,
+			Result: fmt.Sprintf("New component %v", v),
+		}
 		fmt.Println("ResolveAsync", v)
 		p.Resolve(v)
 	}()
