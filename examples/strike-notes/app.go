@@ -149,7 +149,7 @@ func bootstrap() Component {
 					"react-error-boundary": "https://esm.sh/react-error-boundary"
 				}
 			}`}),
-		H("script", Props{"src": "/static/strike/client.js"}),
+		H("script", Props{"async": "async", "type": "module", "src": "/static/strike/bootstrap.js"}),
 	)
 }
 
