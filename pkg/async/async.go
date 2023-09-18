@@ -1,11 +1,13 @@
 package async
 
 import (
+	"context"
+
 	"github.com/JLarky/strike/pkg/h"
 	"github.com/JLarky/strike/pkg/promise"
 )
 
-func Async(compGen func() h.Component) promise.Promise[h.Component] {
-	p := promise.NewPromise[h.Component]()
+func Async(ctx context.Context, compGen func() h.Component) promise.Promise[h.Component] {
+	p := promise.NewPromise[h.Component](ctx)
 	return p
 }

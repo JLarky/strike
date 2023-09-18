@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -13,6 +14,7 @@ import (
 	"github.com/JLarky/strike/pkg/async"
 	. "github.com/JLarky/strike/pkg/h"
 	"github.com/JLarky/strike/pkg/island"
+	"github.com/JLarky/strike/pkg/promise"
 	"github.com/JLarky/strike/pkg/strike"
 	"github.com/JLarky/strike/pkg/suspense"
 )
@@ -21,6 +23,9 @@ func main() {
 	http.Handle("/favicon.ico", http.FileServer(http.Dir("public")))
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("public"))))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		ctx = promise.WithContext(ctx)
+		fmt.Println("ctx", ctx)
 		flush := func() {
 			if f, ok := w.(http.Flusher); ok {
 				f.Flush()
@@ -28,7 +33,10 @@ func main() {
 			}
 		}
 
-		page := Page(r.URL)
+		page := Page(
+			r.URL,
+			App(r.URL, ctx),
+		)
 
 		rsc := r.Header.Get("RSC")
 		if rsc == "1" {
@@ -91,13 +99,14 @@ func main() {
 			close(s.DoneChan)
 		}()
 
+		time.Sleep(3000 * time.Millisecond)
 		<-s.Done()
 	})
 	fmt.Println("Server started at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func Page(url *url.URL) Component {
+func Page(url *url.URL, children Component) Component {
 	// time.Sleep(1000 * time.Millisecond)
 	fmt.Println("Page", url)
 	nav := H("nav",
@@ -122,7 +131,7 @@ func Page(url *url.URL) Component {
 			`}),
 		),
 		H("body",
-			App(url),
+			children,
 			H("div", Props{"id": "root"}, nav, "Loading... "+url.Path),
 			bootstrap(),
 		),
@@ -140,7 +149,7 @@ func bootstrap() Component {
 					"react-error-boundary": "https://esm.sh/react-error-boundary"
 				}
 			}`}),
-		H("script", Props{"src": "/static/strike/bootstrap.js", "type": "module"}),
+		H("script", Props{"src": "/static/strike/client.js"}),
 	)
 }
 
@@ -159,7 +168,7 @@ func App2(url *url.URL) Component {
 	// ))
 }
 
-func App(url *url.URL) Component {
+func App(url *url.URL, ctx context.Context) Component {
 	return H("div", Props{"class": "main"},
 		H("section", Props{"class": "col sidebar"},
 			H("section", Props{"class": "sidebar-header"},
@@ -173,6 +182,7 @@ func App(url *url.URL) Component {
 			H("nav", H(suspense.Suspense,
 				Props{"fallback": noteListSkeleton()},
 				async.Async(
+					ctx,
 					func() Component {
 						c := NodeList(url)
 						fmt.Println("c", c)
@@ -216,13 +226,13 @@ func editButton(noteId *string, title string) Component {
 func noteListSkeleton() Component {
 	return H("div", H("ul", Props{"class": "notes-list skeleton-container"},
 		H("li", Props{"class": "v-stack"},
-			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height: 5em"}),
+			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height:5em"}),
 		),
 		H("li", Props{"class": "v-stack"},
-			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height: 5em"}),
+			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height:5em"}),
 		),
 		H("li", Props{"class": "v-stack"},
-			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height: 5em"}),
+			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height:5em"}),
 		),
 	))
 }
