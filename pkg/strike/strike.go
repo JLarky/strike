@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/JLarky/strike/pkg/h"
+	"github.com/JLarky/strike/pkg/island"
 	"github.com/JLarky/strike/pkg/suspense"
 )
 
@@ -14,9 +15,8 @@ type Component = h.Component
 
 type Island struct {
 	Component
-	Fallback      Component `json:"fallback"`
-	ComopnentName string    `json:"componentName"`
-	Props         Props     `json:"props"`
+	ComopnentName string `json:"componentName"`
+	Props         Props  `json:"props"`
 }
 
 type Props = h.Props
@@ -24,6 +24,15 @@ type Props = h.Props
 func RenderToString(wr io.Writer, comp Component) error {
 	if suspense.IsSuspense(comp) {
 		switch fallback := comp.Props["fallback"].(type) {
+		case Component:
+			return RenderToString(wr, fallback)
+		default:
+			fmt.Printf("Suspense component %v is missing fallback prop (got %v instead)", comp, fallback)
+			return nil
+		}
+	}
+	if island.IsIsland(comp) {
+		switch fallback := comp.Props["ssrFallback"].(type) {
 		case Component:
 			return RenderToString(wr, fallback)
 		default:
@@ -56,6 +65,8 @@ func RenderToString(wr io.Writer, comp Component) error {
 			strValue = <-v
 		case []any:
 			continue
+		case Component:
+			return fmt.Errorf("you can only pass a component as a prop to Island or Suspense components. Error rendering component %v", comp)
 		default:
 			return fmt.Errorf("cannot convert prop %s (%v %T) to string", prop, value, value)
 		}
@@ -107,9 +118,31 @@ func RenderToString(wr io.Writer, comp Component) error {
 	return nil
 }
 
-func RenderToStream(wr io.Writer, comp Component) error {
+type Stream struct {
+	io.Writer
+	DoneChan chan bool
+}
+
+func (s Stream) Done() <-chan bool {
+	return s.DoneChan
+}
+
+func NewStream(wr io.Writer) Stream {
+	return Stream{wr, make(chan bool)}
+}
+
+func RenderToStream(wr Stream, comp Component) error {
 	if suspense.IsSuspense(comp) {
 		switch fallback := comp.Props["fallback"].(type) {
+		case Component:
+			return RenderToStream(wr, fallback)
+		default:
+			fmt.Printf("Suspense component %v is missing fallback prop (got %v instead)", comp, fallback)
+			return nil
+		}
+	}
+	if island.IsIsland(comp) {
+		switch fallback := comp.Props["ssrFallback"].(type) {
 		case Component:
 			return RenderToString(wr, fallback)
 		default:
@@ -159,17 +192,17 @@ func RenderToStream(wr io.Writer, comp Component) error {
 			if child != nil {
 				switch childComp := child.(type) {
 				case Component:
-					err = RenderToString(wr, childComp)
+					err = RenderToStream(wr, childComp)
 					if err != nil {
 						return err
 					}
 				case func() Component:
-					err = RenderToString(wr, childComp())
+					err = RenderToStream(wr, childComp())
 					if err != nil {
 						return err
 					}
 				case <-chan Component:
-					err = RenderToString(wr, <-childComp)
+					err = RenderToStream(wr, <-childComp)
 					if err != nil {
 						return err
 					}

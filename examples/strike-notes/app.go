@@ -10,7 +10,9 @@ import (
 	"time"
 
 	"github.com/JLarky/strike-notes/server/db"
+	"github.com/JLarky/strike/pkg/async"
 	. "github.com/JLarky/strike/pkg/h"
+	"github.com/JLarky/strike/pkg/island"
 	"github.com/JLarky/strike/pkg/strike"
 	"github.com/JLarky/strike/pkg/suspense"
 )
@@ -44,11 +46,15 @@ func main() {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write([]byte("<!doctype html>"))
 		// flush()
-		err := strike.RenderToString(w, page)
+		s := strike.NewStream(w)
+		err := strike.RenderToStream(s, page)
 		if err != nil {
 			fmt.Printf("Error rendering page: %v", err)
 			return
 		}
+
+		// <-skeletonDone
+
 		flush()
 		// w.Write([]byte("Hello, World!"))
 		jsonData, err := json.MarshalIndent(page, "", "  ")
@@ -79,6 +85,13 @@ func main() {
 			w.Write(jsonData)
 			w.Write([]byte("</template>"))
 		}
+
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			close(s.DoneChan)
+		}()
+
+		<-s.Done()
 	})
 	fmt.Println("Server started at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -154,10 +167,21 @@ func App(url *url.URL) Component {
 				H("strong", "React Notes"),
 			),
 			H("section", Props{"class": "sidebar-menu", "role": "menubar"},
-				SearchField(),
-				EditButton(nil, "New"),
+				searchField(url),
+				editButton(nil, "New"),
 			),
-			H("nav", H(suspense.Suspense, Props{"fallback": noteListSkeleton()})), // func() Component { return NodeList(url) },
+			H("nav", H(suspense.Suspense,
+				Props{"fallback": noteListSkeleton()},
+				async.Async(
+					func() Component {
+						c := NodeList(url)
+						fmt.Println("c", c)
+						// panic(123)
+						return c
+					},
+				),
+			)),
+			// func() Component { return NodeList(url) },
 			// <Suspense fallback={<NoteListSkeleton />}>
 			// 	<NoteList searchText={searchText} />
 			// </Suspense>
@@ -170,19 +194,23 @@ func App(url *url.URL) Component {
 	)
 }
 
-func SearchField() Component {
-	return Island("SearchField", nil,
-		H("form", Props{"class": "search", "role": "search"},
+func searchField(url *url.URL) Component {
+	q := url.Query().Get("q")
+	return H(island.Island, Props{
+		"component-export": "SearchField",
+		"ssrFallback": H("form", Props{"class": "search", "role": "search"},
 			H("label", Props{"class": "offscreen"}),
-			H("input", Props{"placeholder": "Search", "disabled": "disabled"}),
-		),
-	)
+			H("input", Props{"placeholder": "Search", "value": q, "disabled": "disabled"}),
+		)})
 }
 
-func EditButton(noteId *string, title string) Component {
-	return Island("EditButton", Props{"noteId": noteId, "title": title},
-		H("button", Props{"class": "edit-button edit-button--solid", "role": "menuitem"}, title),
-	)
+func editButton(noteId *string, title string) Component {
+	ssrFallback := H("button", Props{"class": "edit-button edit-button--solid", "role": "menuitem"}, title)
+	return H(island.Island, Props{
+		"component-export": "EditButton",
+		"noteId":           noteId,
+		"ssrFallback":      ssrFallback,
+	}, title)
 }
 
 func noteListSkeleton() Component {

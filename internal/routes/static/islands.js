@@ -1,10 +1,9 @@
 import * as islands from "./islands.js";
 import React from "https://esm.sh/react@canary?dev";
-import { hydrateRoot } from "https://esm.sh/react-dom@canary/client?dev";
 import { jsx, jsxs } from "https://esm.sh/react@canary/jsx-runtime?dev";
 
-export function StrikeIsland({ children }) {
-  const { "component-export": exportName } = children.props;
+export function StrikeIsland(props) {
+  const { "component-export": exportName, ssrFallback, ...rest } = props;
   if (!exportName) {
     throw new Error(`strike-island is missing component-export prop`);
   }
@@ -17,9 +16,9 @@ export function StrikeIsland({ children }) {
     setIsMounted(true);
   }, []);
   if (isMounted) {
-    return jsx(comp, children.props);
+    return jsx(comp, rest);
   }
-  return children;
+  return ssrFallback;
 }
 
 export function Counter({ serverCounter }) {

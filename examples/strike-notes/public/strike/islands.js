@@ -7,7 +7,7 @@ export { default as SearchField } from "../app/SearchField.js";
 export { default as SidebarNoteContent } from "../app/SidebarNoteContent.js";
 
 export function StrikeIsland(props) {
-  const { "component-export": exportName } = props;
+  const { "component-export": exportName, ssrFallback, ...rest } = props;
   if (!exportName) {
     throw new Error(`strike-island is missing component-export prop`);
   }
@@ -20,7 +20,7 @@ export function StrikeIsland(props) {
     setIsMounted(true);
   }, []);
   if (isMounted) {
-    return jsx("strike-island", { ...props, children: jsx(comp, props) });
+    return jsx(comp, rest);
   }
-  return jsx("strike-island", props);
+  return ssrFallback;
 }

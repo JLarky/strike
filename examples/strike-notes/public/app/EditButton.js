@@ -3,7 +3,7 @@ import {useTransition} from "react";
 import {
 jsx
 } from "react/jsx-runtime";
-function EditButton({ noteId, title, children }) {
+function EditButton({ noteId, children }) {
   const [isPending, startTransition] = useTransition();
   const isDraft = noteId == null;
   return jsx("button", {
@@ -18,7 +18,7 @@ function EditButton({ noteId, title, children }) {
       });
     },
     role: "menuitem",
-    children: title
+    children
   });
 }
 export {

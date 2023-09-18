@@ -12,6 +12,7 @@ import (
 
 	"github.com/JLarky/strike/pkg/h"
 	. "github.com/JLarky/strike/pkg/h"
+	"github.com/JLarky/strike/pkg/island"
 	"github.com/JLarky/strike/pkg/strike"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -67,8 +68,8 @@ func staticHandler2(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func Island(componentName string, props Props, children ...any) Component {
-	return H("strike-island", props, Props{"component-export": componentName}, children)
+func Island(componentName string, props Props, fallback any) Component {
+	return H(island.Island, props, Props{"component-export": componentName, "ssrFallback": fallback})
 }
 
 var serverCounter uint64

@@ -10,7 +10,7 @@
 
 import { useTransition } from "react";
 
-export default function EditButton({ noteId, title, children }) {
+export default function EditButton({ noteId, children }) {
   const [isPending, startTransition] = useTransition();
   const isDraft = noteId == null;
   return (
@@ -27,7 +27,7 @@ export default function EditButton({ noteId, title, children }) {
       }}
       role="menuitem"
     >
-      {title}
+      {children}
     </button>
   );
 }

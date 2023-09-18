@@ -24,18 +24,18 @@ func TestOneChild(t *testing.T) {
 func TestNoChildren(t *testing.T) {
 	a := H("div")
 	assert.Equal(t, a.Tag_type, "div")
-	assert.Equal(t, 1, len(a.Props))
-	children := a.Props["children"].([]any)
-	assert.Equal(t, 0, len(children))
+	assert.Equal(t, 0, len(a.Props))
+	children := a.Props["children"]
+	assert.Equal(t, nil, children)
 }
 
 func TestNoChildrenWithProps(t *testing.T) {
 	a := H("div", Props{"style": "color: red;"})
 	assert.Equal(t, a.Tag_type, "div")
-	assert.Equal(t, 2, len(a.Props))
+	assert.Equal(t, 1, len(a.Props))
 	assert.Equal(t, "color: red;", a.Props["style"])
-	children := a.Props["children"].([]any)
-	assert.Equal(t, 0, len(children))
+	children := a.Props["children"]
+	assert.Equal(t, nil, children)
 }
 
 func TestCustomComponent(t *testing.T) {
@@ -45,19 +45,19 @@ func TestCustomComponent(t *testing.T) {
 	a := H(c, Props{"style": "color: red;"})
 	fmt.Println(a.Props)
 	assert.Equal(t, a.Tag_type, "div")
-	assert.Equal(t, 2, len(a.Props))
+	assert.Equal(t, 1, len(a.Props))
 	assert.Equal(t, "color: red;", a.Props["style"])
-	children := a.Props["children"].([]any)
-	assert.Equal(t, 0, len(children))
+	children := a.Props["children"]
+	assert.Equal(t, nil, children)
 }
 
 func TestNilInProps(t *testing.T) {
 	a := H("div", Props{"value": nil})
 	assert.Equal(t, a.Tag_type, "div")
-	assert.Equal(t, 2, len(a.Props))
+	assert.Equal(t, 1, len(a.Props))
 	assert.Equal(t, nil, a.Props["value"])
-	children := a.Props["children"].([]any)
-	assert.Equal(t, 0, len(children))
+	children := a.Props["children"]
+	assert.Equal(t, nil, children)
 }
 
 func TestSpec(t *testing.T) {
