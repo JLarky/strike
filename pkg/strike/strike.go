@@ -135,7 +135,11 @@ func RenderToStream(wr Stream, comp Component) error {
 	if suspense.IsSuspense(comp) {
 		switch fallback := comp.Props["fallback"].(type) {
 		case Component:
-			return RenderToStream(wr, fallback)
+			wr.Write([]byte("<!-- Suspense Starts -->"))
+			err := RenderToStream(wr, fallback)
+			fmt.Printf("Suspense component")
+			wr.Write([]byte("<!-- Suspense Ends -->"))
+			return err
 		default:
 			fmt.Printf("warning: Suspense component is missing fallback prop (got %v instead) in %v", fallback, comp)
 			return nil
