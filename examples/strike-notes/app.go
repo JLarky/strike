@@ -78,8 +78,7 @@ func main() {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write([]byte("<!doctype html>"))
 		// flush()
-		s := strike.NewStream(w)
-		err := strike.RenderToStream(s, page)
+		err := strike.RenderToStream(w, page)
 		if err != nil {
 			fmt.Printf("Error rendering page: %v", err)
 			return
