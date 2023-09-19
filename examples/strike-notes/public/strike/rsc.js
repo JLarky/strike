@@ -39,11 +39,10 @@ async function chunksToJSX(chunks) {
 }
 
 export function chunkToJSX(ctx, x) {
-  console.log("chunk", x);
   const parsed = JSON.parse(x, function fromJSON(key, value) {
     return parseModelString(ctx, this, key, value);
   });
-  console.log("str", parsed, ctx);
+  // console.log("str", parsed, ctx);
   return parsed;
 }
 
@@ -91,7 +90,7 @@ function parseModelString(ctx, parent, key, value) {
     parent.type = parent["$type"];
     delete parent["$type"];
     parent.ref = null;
-    parent.key = null;
+    parent.key = parent.props.key || null;
     for (const [k, v] of Object.entries(parent.props || {})) {
       if (k === "style" && typeof v === "string") {
         /** @type {{ [key: string]: string }} */
