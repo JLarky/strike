@@ -185,7 +185,12 @@ func RenderToStream(wr Stream, comp Component) error {
 
 		wr.Write([]byte(fmt.Sprintf(` %s="%s"`, html.EscapeString(prop), html.EscapeString(strValue))))
 	}
-	wr.Write([]byte(">"))
+	if comp.Tag_type == "meta" {
+		wr.Write([]byte(" />"))
+		return nil
+	} else {
+		wr.Write([]byte(">"))
+	}
 	childTpl, err := template.New("htmlString").Parse("{{.}}")
 	if err != nil {
 		return err
