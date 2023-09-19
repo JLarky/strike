@@ -12,33 +12,35 @@ var reqCounter uint64
 
 type Promise[T any] struct {
 	PromiseId string
-	ready     chan bool
+	readyCh   chan bool
 	value     T
 	ctx       context.Context
 }
 
-type test string
+type ctxKey int
 
-type Task struct {
-	ID     string
-	Result any
+const chunkQueueKey ctxKey = 0
+
+type PromiseResult struct {
+	PromiseId string
+	Result    any
 }
 
-type MyStuff struct {
-	TaskChannel chan Task
-	WorkerGroup *sync.WaitGroup
+type chunkQueue struct {
+	chunkChannel chan any
+	workerGroup  *sync.WaitGroup
 }
 
-func WithContext(ctx context.Context) (context.Context, func() chan Task) {
-	taskChannel := make(chan Task)
+func WithContext(ctx context.Context) (context.Context, func() chan any) {
+	chunkCh := make(chan any)
 	wg := sync.WaitGroup{}
 
-	myStuff := MyStuff{
-		TaskChannel: taskChannel,
-		WorkerGroup: &wg,
+	chunkQueue := chunkQueue{
+		chunkChannel: chunkCh,
+		workerGroup:  &wg,
 	}
 
-	getTaskCh := func() chan Task {
+	getChunkCh := func() chan any {
 		go func() {
 			workGroupDone := make(chan bool)
 			go func() {
@@ -50,18 +52,18 @@ func WithContext(ctx context.Context) (context.Context, func() chan Task) {
 			case <-ctx.Done():
 			case <-workGroupDone:
 			}
-			close(taskChannel)
+			close(chunkCh)
 		}()
 
-		return taskChannel
+		return chunkCh
 	}
 
-	return context.WithValue(ctx, test("promise"), &myStuff), getTaskCh
+	return context.WithValue(ctx, chunkQueueKey, &chunkQueue), getChunkCh
 }
 
-func FromContext(ctx context.Context) (*MyStuff, bool) {
-	stuff, ok := ctx.Value(test("promise")).(*MyStuff)
-	return stuff, ok
+func FromContext(ctx context.Context) (*chunkQueue, bool) {
+	queue, ok := ctx.Value(chunkQueueKey).(*chunkQueue)
+	return queue, ok
 }
 
 func NewPromise[T any](ctx context.Context) Promise[T] {
@@ -69,14 +71,19 @@ func NewPromise[T any](ctx context.Context) Promise[T] {
 	c := make(chan bool)
 	return Promise[T]{
 		PromiseId: fmt.Sprintf("%d", id),
-		ready:     c,
+		readyCh:   c,
 		ctx:       ctx,
 	}
 }
 
 func (p *Promise[T]) Resolve(value T) {
 	p.value = value
-	close(p.ready)
+	close(p.readyCh)
+}
+
+func (c Promise[T]) String() string {
+	type Alias Promise[T]
+	return fmt.Sprintf("Promise(%v)", Alias(c))
 }
 
 func (p Promise[T]) MarshalJSON() ([]byte, error) {
@@ -88,16 +95,24 @@ func (p Promise[T]) MarshalJSON() ([]byte, error) {
 	})
 }
 
+func (p PromiseResult) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"$strike": "promise-result",
+		"id":      p.PromiseId,
+		"result":  p.Result,
+	})
+}
+
 func (p *Promise[T]) ResolveAsync(valueGen func() T) {
-	myStuff, ok := FromContext(p.ctx)
+	queue, ok := FromContext(p.ctx)
 	if !ok {
 		panic("failed to get context")
 	}
 
-	myStuff.WorkerGroup.Add(1)
+	queue.workerGroup.Add(1)
 
 	go func() {
-		defer myStuff.WorkerGroup.Done()
+		defer queue.workerGroup.Done()
 		defer func() {
 			if r := recover(); r != nil {
 				fmt.Printf("%T\n", p)
@@ -113,35 +128,30 @@ func (p *Promise[T]) ResolveAsync(valueGen func() T) {
 			// continue
 		}
 
-		ch := make(chan Task)
+		ch := make(chan PromiseResult)
 		go func() {
 			v := valueGen()
 			p.Resolve(v)
-			ch <- Task{
-				ID:     p.PromiseId,
-				Result: v,
+			ch <- PromiseResult{
+				PromiseId: p.PromiseId,
+				Result:    v,
 			}
 		}()
-		// TaskChannel is going to be close if the context is done
+		// chunkChannel is going to be close if the context is done
 		select {
 		case <-p.ctx.Done():
-		case task := <-ch:
-			myStuff.TaskChannel <- task
+		case chunk := <-ch:
+			queue.chunkChannel <- chunk
 		}
 	}()
 }
 
 func (p *Promise[T]) Then() T {
-	<-p.ready
+	<-p.readyCh
 	return p.value
 }
 
 func (p *Promise[T]) MarkSent() {
-	fmt.Println("MarkSent", p.ctx.Value(test("promise")))
-	p.ready = nil
-}
-
-func (c Promise[T]) String() string {
-	type Alias Promise[T]
-	return fmt.Sprintf("Promise(%v)", Alias(c))
+	fmt.Println("MarkSent", p.ctx.Value(chunkQueueKey))
+	p.readyCh = nil
 }

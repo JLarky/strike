@@ -31,7 +31,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		ctx, getTaskCh := promise.WithContext(ctx)
+		ctx, getChunkCh := promise.WithContext(ctx)
 
 		fmt.Println("ctx", ctx)
 		flush := func() {
@@ -59,17 +59,12 @@ func main() {
 			flush()
 
 			{
-				for task := range getTaskCh() {
+				for chunk := range getChunkCh() {
 					newEncoder := json.NewEncoder(w)
 					newEncoder.SetEscapeHTML(false) // TODO: check if this is safe
-					err := newEncoder.Encode(
-						map[string]any{
-							"$strike": "promise-result",
-							"id":      task.ID,
-							"result":  task.Result,
-						})
+					err := newEncoder.Encode(chunk)
 					if err != nil {
-						fmt.Printf("Error encoding task: %v", err)
+						fmt.Printf("Error encoding chunk: %v", err)
 						return
 					}
 					w.Write([]byte("\n"))
@@ -124,13 +119,8 @@ func main() {
 		}
 
 		{
-			for task := range getTaskCh() {
-				data := map[string]any{
-					"$strike": "promise-result",
-					"id":      task.ID,
-					"result":  task.Result,
-				}
-				jsonData, err := json.MarshalIndent(data, "", "  ")
+			for chunk := range getChunkCh() {
+				jsonData, err := json.MarshalIndent(chunk, "", "  ")
 				if err != nil {
 					fmt.Printf("Error serializing data: %v", err)
 					return
