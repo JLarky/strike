@@ -29,8 +29,7 @@ type MyStuff struct {
 	WorkerGroup *sync.WaitGroup
 }
 
-func WithContext(ctx context.Context) (context.Context, chan Task, *sync.WaitGroup) {
-
+func WithContext(ctx context.Context) (context.Context, func() chan Task) {
 	taskChannel := make(chan Task)
 	wg := sync.WaitGroup{}
 
@@ -39,7 +38,25 @@ func WithContext(ctx context.Context) (context.Context, chan Task, *sync.WaitGro
 		WorkerGroup: &wg,
 	}
 
-	return context.WithValue(ctx, test("promise"), &myStuff), taskChannel, &wg
+	getTaskCh := func() chan Task {
+		go func() {
+			workGroupDone := make(chan bool)
+			go func() {
+				wg.Wait()
+				fmt.Println("WorkerGroup done")
+				workGroupDone <- true
+			}()
+			select {
+			case <-ctx.Done():
+			case <-workGroupDone:
+			}
+			close(taskChannel)
+		}()
+
+		return taskChannel
+	}
+
+	return context.WithValue(ctx, test("promise"), &myStuff), getTaskCh
 }
 
 func FromContext(ctx context.Context) (*MyStuff, bool) {
@@ -88,11 +105,28 @@ func (p *Promise[T]) ResolveAsync(valueGen func() T) {
 				fmt.Println("Recovered in ResolveAsync", r)
 			}
 		}()
-		v := valueGen()
-		p.Resolve(v)
-		myStuff.TaskChannel <- Task{
-			ID:     p.PromiseId,
-			Result: v,
+		// exit early if the context is done
+		select {
+		case <-p.ctx.Done():
+			return
+		default:
+			// continue
+		}
+
+		ch := make(chan Task)
+		go func() {
+			v := valueGen()
+			p.Resolve(v)
+			ch <- Task{
+				ID:     p.PromiseId,
+				Result: v,
+			}
+		}()
+		// TaskChannel is going to be close if the context is done
+		select {
+		case <-p.ctx.Done():
+		case task := <-ch:
+			myStuff.TaskChannel <- task
 		}
 	}()
 }

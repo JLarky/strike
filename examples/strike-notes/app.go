@@ -31,7 +31,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		ctx, taskChannel, wg := promise.WithContext(ctx)
+		ctx, getTaskCh := promise.WithContext(ctx)
 
 		fmt.Println("ctx", ctx)
 		flush := func() {
@@ -44,11 +44,6 @@ func main() {
 			r.URL,
 			App(r.URL, ctx),
 		)
-
-		go func() {
-			wg.Wait()
-			close(taskChannel)
-		}()
 
 		rsc := r.Header.Get("RSC")
 		if rsc == "1" {
@@ -64,7 +59,7 @@ func main() {
 			flush()
 
 			{
-				for task := range taskChannel {
+				for task := range getTaskCh() {
 					newEncoder := json.NewEncoder(w)
 					newEncoder.SetEscapeHTML(false) // TODO: check if this is safe
 					err := newEncoder.Encode(
@@ -129,7 +124,7 @@ func main() {
 		}
 
 		{
-			for task := range taskChannel {
+			for task := range getTaskCh() {
 				data := map[string]any{
 					"$strike": "promise-result",
 					"id":      task.ID,
