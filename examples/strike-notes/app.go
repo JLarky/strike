@@ -19,6 +19,8 @@ import (
 	"github.com/JLarky/strike/pkg/suspense"
 )
 
+var useStreaming = false
+
 func main() {
 	http.Handle("/favicon.ico", http.FileServer(http.Dir("public")))
 	http.Handle("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -204,6 +206,21 @@ func App(url *url.URL, ctx context.Context) Component {
 		time.Sleep(2000 * time.Millisecond)
 		return H("div", "Hello, World!")
 	})
+	var nav Component
+	if useStreaming {
+		nav = H("nav", H(suspense.Suspense,
+			Props{"fallback": noteListSkeleton(), "p": p, "p2": p2},
+			async.Async(
+				ctx,
+				func() Component {
+					return nodeList(url)
+				},
+			),
+		))
+	} else {
+		nav = H("nav", nodeList(url))
+	}
+
 	return H("div", Props{"class": "main"},
 		H("section", Props{"class": "col sidebar"},
 			H("section", Props{"class": "sidebar-header"},
@@ -214,16 +231,7 @@ func App(url *url.URL, ctx context.Context) Component {
 				searchField(url),
 				editButton(nil, "New"),
 			),
-			// H("nav", nodeList(url)),
-			H("nav", H(suspense.Suspense,
-				Props{"fallback": noteListSkeleton(), "p": p, "p2": p2},
-				async.Async(
-					ctx,
-					func() Component {
-						return nodeList(url)
-					},
-				),
-			)),
+			nav,
 		),
 		H("section", Props{"class": "col note-viewer"},
 			H("div", Props{"class": "note--empty-state"},
