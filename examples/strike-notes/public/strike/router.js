@@ -1,5 +1,5 @@
 // @ts-check
-import { RscComponent, jsonToJSX } from "./rsc.js";
+import { RscComponent } from "./rsc.js";
 import React from "react";
 import { jsx } from "react/jsx-runtime";
 
@@ -11,11 +11,11 @@ export function Router() {
   const [router, setRouter] = useState(() =>
     createRouterState(window.location.pathname + window.location.search)
   );
-  console.log("router", router);
   React.useEffect(() => {
     addNavigation(setRouter);
   }, []);
   return jsx(RscComponent, {
+    isInitial: router.isInitial,
     url: router.href,
     routerKey: router.key,
   });

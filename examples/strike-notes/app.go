@@ -125,20 +125,21 @@ func main() {
 
 		{
 			for task := range taskChannel {
-				w.Write([]byte("\n<script>__rsc.push(`"))
-				newEncoder := json.NewEncoder(w)
-				newEncoder.SetEscapeHTML(false) // TODO: check if this is safe
-				err := newEncoder.Encode(
-					map[string]any{
-						"$strike": "promise-result",
-						"id":      task.ID,
-						"result":  task.Result,
-					})
+				data := map[string]any{
+					"$strike": "promise-result",
+					"id":      task.ID,
+					"result":  task.Result,
+				}
+				jsonData, err := json.MarshalIndent(data, "", "  ")
 				if err != nil {
-					fmt.Printf("Error encoding task: %v", err)
+					fmt.Printf("Error serializing data: %v", err)
 					return
 				}
-				w.Write([]byte("`)</script>"))
+				err = t.Execute(w, string(jsonData))
+				if err != nil {
+					fmt.Printf("Error parsing template: %v", err)
+					return
+				}
 				flush()
 			}
 		}

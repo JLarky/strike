@@ -4,37 +4,42 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import { StrikeIsland } from "./islands.js";
 import { StrikeSuspense } from "./suspense.js";
 
-export function RscComponent({ initialPage, url, routerKey }) {
-  if (initialPage) {
-    return initialPage;
+export function RscComponent({ isInitial, url, routerKey }) {
+  if (isInitial) {
+    return waitForInitialJSX();
   }
   // return React.use(fetchClientJSX(url, routerKey));
   // Error: Support for `use` not yet implemented in react-debug-tools.
   return fetchClientJSX(url, routerKey);
 }
 
-const fetchClientJSX = React.cache(async function fetchClientJSX(
-  pathname,
-  key
-) {
-  const response = await fetch(pathname, {
+const waitForInitialJSX = React.cache(async function waitForInitialJSX() {
+  const chunks = readInitialChunks();
+  return await chunksToJSX(chunks);
+});
+
+const fetchClientJSX = React.cache(async function fetchClientJSX(href, key) {
+  const response = await fetch(href, {
     headers: { RSC: "1" },
   });
 
-  const ctx = { promises: new Map() };
-
   const chunks = readLines(response);
+  return await chunksToJSX(chunks);
+});
 
-  const root = await chunks.next().then((x) => jsonToJSX(ctx, x.value));
+async function chunksToJSX(chunks) {
+  const ctx = { promises: new Map() };
+  const root = await chunks.next().then((x) => chunkToJSX(ctx, x.value));
   (async () => {
     for await (const line of chunks) {
-      jsonToJSX(ctx, line);
+      chunkToJSX(ctx, line);
     }
   })();
   return root;
-});
+}
 
-export function jsonToJSX(ctx, x) {
+export function chunkToJSX(ctx, x) {
+  console.log("chunk", x);
   const parsed = JSON.parse(x, function fromJSON(key, value) {
     return parseModelString(ctx, this, key, value);
   });
@@ -121,6 +126,42 @@ function parseModelString(ctx, parent, key, value) {
   return value;
 }
 
+async function* readInitialChunks() {
+  // make sure that it's an array (this code could be executed before JSX streaming has started)
+  window.__rsc = window.__rsc || [];
+  // consume anything that was already streamed
+  for (const x of __rsc) {
+    yield x;
+  }
+  // wait for new chunks to be streamed
+  const chunkQueue = [];
+  let resolveChunk = null;
+
+  // new chunks will call __rsc.push
+  const originalPush = window.__rsc.push.bind(window.__rsc);
+  window.__rsc.push = function (x) {
+    originalPush(x); // to make array look pretty
+    chunkQueue.push(x); // collect chunks
+    if (resolveChunk) {
+      resolveChunk(); // trigger promise
+      resolveChunk = null;
+    }
+  };
+
+  // keep generator running if we are still waiting for chunks
+  while (true) {
+    if (chunkQueue.length > 0) {
+      yield chunkQueue.shift();
+    } else {
+      // Wait for the next chunk
+      // TODO: stop stream when document is fully loaded
+      await new Promise((resolve) => {
+        resolveChunk = resolve;
+      });
+    }
+  }
+}
+
 async function* readLines(response) {
   const reader = response.body?.getReader();
   let accumulatedData = "";
@@ -135,7 +176,6 @@ async function* readLines(response) {
 
       // Split by line breaks but keep the last, potentially incomplete line
       let lastNewlineIndex = accumulatedData.lastIndexOf("\n\n");
-      console.log("accumulatedData", accumulatedData.length, lastNewlineIndex);
       if (lastNewlineIndex !== -1) {
         const lines = accumulatedData
           .substring(0, lastNewlineIndex)
