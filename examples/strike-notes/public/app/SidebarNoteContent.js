@@ -30,7 +30,7 @@ function SidebarNoteContent({
       isExpanded ? "note-expanded" : ""
     ].join(" "),
     children: [
-      children[0].props.children,
+      children,
       jsx("button", {
         className: "sidebar-note-open",
         style: {
@@ -63,7 +63,7 @@ function SidebarNoteContent({
           alt: "Expand"
         })
       }),
-      isExpanded && children[1].props.children
+      isExpanded && expandedChildren
     ]
   });
 }

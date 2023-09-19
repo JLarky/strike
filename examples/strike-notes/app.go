@@ -162,14 +162,6 @@ func Page(url *url.URL, children Component) Component {
 			H("meta", Props{"name": "viewport", "content": "width=device-width, initial-scale=1"}),
 			H("link", Props{"rel": "stylesheet", "href": "/static/style.css"}),
 			H("title", "React Notes"),
-			H("style", Props{"type": "text/css"}, []template.HTML{`
-			strike-slot {
-				display: none;
-			}
-			strike-island {
-				display: contents;
-			}
-			`}),
 			bootstrap(),
 		),
 		H("body",
@@ -222,6 +214,7 @@ func App(url *url.URL, ctx context.Context) Component {
 				searchField(url),
 				editButton(nil, "New"),
 			),
+			// H("nav", nodeList(url)),
 			H("nav", H(suspense.Suspense,
 				Props{"fallback": noteListSkeleton(), "p": p, "p2": p2},
 				async.Async(
@@ -291,12 +284,12 @@ func nodeList(url *url.URL) Component {
 	}
 	noteComponents := make([]Component, len(notes))
 	for i, note := range notes {
-		noteComponents[i] = H("li", Props{"key": note.Id}, SidebarNote(note))
+		noteComponents[i] = H("li", Props{"key": note.Id}, sidebarNote(note))
 	}
 	return H("ul", Props{"class": "notes-list"}, noteComponents)
 }
 
-func SidebarNote(note db.Note) Component {
+func sidebarNote(note db.Note) Component {
 	isToday := func(t time.Time) bool {
 		now := time.Now()
 		return t.Year() == now.Year() && t.Month() == now.Month() && t.Day() == now.Day()
@@ -310,20 +303,23 @@ func SidebarNote(note db.Note) Component {
 		lastEdited = note.UpdatedAt.Format("1/_2/06")
 	}
 
-	return Island("SidebarNoteContent", Props{"id": note.Id, "title": note.Title},
-		H("div", Props{"class": "sidebar-note-list-item"},
-			H("header", Props{"class": "sidebar-note-header"},
-				H("strong", note.Title),
-				H("small", lastEdited),
-			),
-			H("button", Props{"class": "sidebar-note-open"}),
-		),
-		H("strike-slot",
-			H("p", Props{"class": "sidebar-note-excerpt"}, H("i", "(No content)")),
-		),
-	)
-}
+	children :=
+		H("header", Props{"class": "sidebar-note-header"},
+			H("strong", note.Title),
+			H("small", lastEdited),
+		)
 
-func Island(componentName string, props Props, children ...any) Component {
-	return H("strike-island", props, Props{"component-export": componentName}, children)
+	return H(island.Island,
+		Props{
+			"id": note.Id, "title": note.Title,
+			"component-export": "SidebarNoteContent",
+			"ssrFallback": H("div",
+				Props{"class": "sidebar-note-list-item"},
+				children,
+				H("button", Props{"class": "sidebar-note-open"}),
+			),
+			"expandedChildren": H("p", Props{"class": "sidebar-note-excerpt"}, H("i", "(No content)")),
+		},
+		children,
+	)
 }

@@ -137,7 +137,7 @@ func RenderToStream(wr Stream, comp Component) error {
 		case Component:
 			return RenderToStream(wr, fallback)
 		default:
-			fmt.Printf("Suspense component %v is missing fallback prop (got %v instead)", comp, fallback)
+			fmt.Printf("warning: Suspense component is missing fallback prop (got %v instead) in %v", fallback, comp)
 			return nil
 		}
 	}
@@ -146,7 +146,7 @@ func RenderToStream(wr Stream, comp Component) error {
 		case Component:
 			return RenderToString(wr, fallback)
 		default:
-			fmt.Printf("Suspense component %v is missing fallback prop (got %v instead)", comp, fallback)
+			fmt.Printf("Island component %v is missing ssrFallback prop (got %v instead)", comp, fallback)
 			return nil
 		}
 	}

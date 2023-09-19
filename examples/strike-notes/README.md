@@ -13,5 +13,11 @@ go run .
 Or
 
 ```bash
-air --build.cmd "go build -o bin/app app.go" --build.bin ./bin/app
+air
+```
+
+Build jsx -> js (optional)
+
+```bash
+while sleep 1; do (cd examples/strike-notes/public/ ;NODE_ENV=production bun build.ts); done
 ```

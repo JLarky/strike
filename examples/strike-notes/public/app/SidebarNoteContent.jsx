@@ -41,7 +41,7 @@ export default function SidebarNoteContent({
         isExpanded ? "note-expanded" : "",
       ].join(" ")}
     >
-      {children[0].props.children}
+      {children}
       <button
         className="sidebar-note-open"
         style={{
@@ -86,7 +86,7 @@ export default function SidebarNoteContent({
           />
         )}
       </button>
-      {isExpanded && children[1].props.children}
+      {isExpanded && expandedChildren}
     </div>
   );
 }
