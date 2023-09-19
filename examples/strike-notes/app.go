@@ -21,7 +21,11 @@ import (
 
 func main() {
 	http.Handle("/favicon.ico", http.FileServer(http.Dir("public")))
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("public"))))
+	http.Handle("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "public, max-age=86400")
+		handler := http.StripPrefix("/static/", http.FileServer(http.Dir("public")))
+		handler.ServeHTTP(w, r)
+	}))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
