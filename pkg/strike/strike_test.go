@@ -2,15 +2,16 @@ package strike_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/JLarky/strike/internal/assert"
-	"github.com/JLarky/strike/pkg/async"
 	. "github.com/JLarky/strike/pkg/h"
 	. "github.com/JLarky/strike/pkg/island"
+	"github.com/JLarky/strike/pkg/promise"
 	"github.com/JLarky/strike/pkg/strike"
 	"github.com/JLarky/strike/pkg/suspense"
 )
@@ -90,8 +91,7 @@ func renderToString(c Component) string {
 
 func renderToStream(c Component) string {
 	buf := new(bytes.Buffer)
-	stream := strike.NewStream(buf)
-	err := strike.RenderToStream(stream, c)
+	err := strike.RenderToString(buf, c)
 	if err != nil {
 		panic(err)
 	}
@@ -106,19 +106,6 @@ func renderToStream(c Component) string {
 // 	assert.Equal(t, `<div><div>Hello</div></div>`, renderToString(a))
 // }
 
-func TestSuspenseAsync(t *testing.T) {
-	a := H("div", H(
-		suspense.Suspense,
-		Props{"fallback": H("div", "Loading...")},
-		async.Async(func() Component {
-			panic("This should not be called")
-			time.Sleep(time.Millisecond * 100)
-			return H("div", "Hello")
-		})),
-	)
-	assert.Equal(t, `<div><div>Loading...</div></div>`, renderToString(a))
-}
-
 func TestPromiseComponent2(t *testing.T) {
 	a := H(Island, Props{"ssrFallback": H("div", "Loading...")}, H("div", "Hello"))
 
@@ -132,20 +119,28 @@ func TestPromiseComponent2(t *testing.T) {
 	assert.Equal(t, `<div>Loading...</div>`, renderToString(a))
 }
 
-func TestSuspenseComponent(t *testing.T) {
+func TestSuspenseNoStreamingFallback(t *testing.T) {
 	a := H("div", H(
 		suspense.Suspense,
 		Props{"fallback": H("div", "Loading...")},
-		async.Async(func() Component { panic("Should not be called") }),
-	))
-	assert.Equal(t, `<div><div>Loading...</div></div>`, renderToString(a))
+		func() Component {
+			time.Sleep(time.Millisecond * 10)
+			return H("div", "Hello")
+		}),
+	)
+	assert.Equal(t, `<div><div>Hello</div></div>`, renderToString(a))
 }
 
-func TestSuspenseComponentToStream(t *testing.T) {
+func TestSuspenseComponentWithChunks(t *testing.T) {
+	ctx, getChunkCh := promise.WithContext(context.Background())
 	a := H("div", H(
 		suspense.Suspense,
-		Props{"fallback": H("div", "Loading...")},
-		async.Async(func() Component { panic("Should not be called") }),
+		Props{"ctx": ctx},
+		Props{"fallback": H("div", "Loading suspense...")},
+		func() Component { time.Sleep(100 * time.Millisecond); return H("div", "Hello") },
 	))
-	assert.Equal(t, `<div><div>Loading...</div></div>`, renderToStream(a))
+	assert.Equal(t, `<div><!-- Suspense Starts --><div>Loading suspense...</div><!-- Suspense Ends --></div>`, renderToString(a))
+	for chunk := range getChunkCh() {
+		assert.EqualJSON(t, `{"$strike":"promise-result","id":"1","result":{"$strike":"component","$type":"div","props":{"children":["Hello"]}}}`, chunk)
+	}
 }
