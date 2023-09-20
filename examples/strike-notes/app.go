@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/JLarky/strike-notes/server/db"
-	"github.com/JLarky/strike/pkg/async"
 	. "github.com/JLarky/strike/pkg/h"
 	"github.com/JLarky/strike/pkg/island"
 	"github.com/JLarky/strike/pkg/promise"
@@ -78,7 +77,7 @@ func main() {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write([]byte("<!doctype html>"))
 		// flush()
-		err := strike.RenderToStream(w, page)
+		err := strike.RenderToString(w, page)
 		if err != nil {
 			fmt.Printf("Error rendering page: %v", err)
 			return
@@ -193,13 +192,11 @@ func App(url *url.URL, ctx context.Context) Component {
 	var nav Component
 	if useStreaming {
 		nav = H("nav", H(suspense.Suspense,
+			Props{"ctx": ctx},
 			Props{"fallback": noteListSkeleton(), "p": p, "p2": p2},
-			async.Async(
-				ctx,
-				func() Component {
-					return nodeList(url)
-				},
-			),
+			func() Component {
+				return nodeList(url)
+			},
 		))
 	} else {
 		nav = H("nav", nodeList(url))

@@ -7,6 +7,9 @@ export function StrikeSuspense(props) {
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
+  if (!props.canStream) {
+    return jsx("div", { children: props.children });
+  }
   if (!isMounted) {
     // TODO: fix hydration
     return props.fallback;

@@ -21,24 +21,29 @@ type Island struct {
 
 type Props = h.Props
 
-func RenderToStream(wr io.Writer, comp Component) error {
+func RenderToString(wr io.Writer, comp Component) error {
 	if suspense.IsSuspense(comp) {
-		switch fallback := comp.Props["fallback"].(type) {
-		case Component:
-			wr.Write([]byte("<!-- Suspense Starts -->"))
-			err := RenderToStream(wr, fallback)
-			fmt.Printf("Suspense component")
-			wr.Write([]byte("<!-- Suspense Ends -->"))
+		if suspense.CanStream(comp) {
+			switch fallback := comp.Props["fallback"].(type) {
+			case Component:
+				wr.Write([]byte("<!-- Suspense Starts -->"))
+				err := RenderToString(wr, fallback)
+				wr.Write([]byte("<!-- Suspense Ends -->"))
+				return err
+			default:
+				fmt.Printf("warning: Suspense component is missing fallback prop (got %v instead) in %v", fallback, comp)
+				return nil
+			}
+		} else {
+			fallback := comp.Props["children"]
+			err := RenderToString(wr, h.H("div", fallback))
 			return err
-		default:
-			fmt.Printf("warning: Suspense component is missing fallback prop (got %v instead) in %v", fallback, comp)
-			return nil
 		}
 	}
 	if island.IsIsland(comp) {
 		switch fallback := comp.Props["ssrFallback"].(type) {
 		case Component:
-			return RenderToStream(wr, fallback)
+			return RenderToString(wr, fallback)
 		default:
 			fmt.Printf("Island component %v is missing ssrFallback prop (got %v instead)", comp, fallback)
 			return nil
@@ -93,17 +98,17 @@ func RenderToStream(wr io.Writer, comp Component) error {
 			if child != nil {
 				switch childComp := child.(type) {
 				case Component:
-					err = RenderToStream(wr, childComp)
+					err = RenderToString(wr, childComp)
 					if err != nil {
 						return err
 					}
 				case func() Component:
-					err = RenderToStream(wr, childComp())
+					err = RenderToString(wr, childComp())
 					if err != nil {
 						return err
 					}
 				case <-chan Component:
-					err = RenderToStream(wr, <-childComp)
+					err = RenderToString(wr, <-childComp)
 					if err != nil {
 						return err
 					}

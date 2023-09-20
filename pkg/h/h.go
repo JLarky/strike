@@ -19,6 +19,17 @@ func (c Component) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// this is just for logs, this does not render to HTML
+func (c Component) String() string {
+	props := ""
+	if len(c.Props) > 0 {
+		for k, v := range c.Props {
+			props += fmt.Sprintf(" %v={%v}", k, v)
+		}
+	}
+	return fmt.Sprintf("<%v%s></%v>", c.Tag_type, props, c.Tag_type)
+}
+
 type Props map[string]any
 
 func H(tag any, rest ...any) Component {
