@@ -8,7 +8,7 @@ export function StrikeSuspense(props) {
     setIsMounted(true);
   }, []);
   if (!props.canStream) {
-    return jsx("div", { children: props.children });
+    return props.children;
   }
   if (!isMounted) {
     // TODO: fix hydration

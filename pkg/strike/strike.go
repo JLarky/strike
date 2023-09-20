@@ -35,9 +35,7 @@ func RenderToString(wr io.Writer, comp Component) error {
 				return nil
 			}
 		} else {
-			fallback := comp.Props["children"]
-			err := RenderToString(wr, h.H("div", fallback))
-			return err
+			return RenderChildren(wr, comp.Props["children"].([]any))
 		}
 	}
 	if island.IsIsland(comp) {
@@ -88,46 +86,53 @@ func RenderToString(wr io.Writer, comp Component) error {
 	} else {
 		wr.Write([]byte(">"))
 	}
+	if (comp.Props["children"]) != nil {
+		err := RenderChildren(wr, comp.Props["children"].([]any))
+		if err != nil {
+			return fmt.Errorf("cannot run RenderChildren %v %v", err, comp)
+		}
+	}
+	wr.Write([]byte("</" + comp.Tag_type + ">"))
+	return nil
+}
+
+func RenderChildren(wr io.Writer, children []any) error {
 	childTpl, err := template.New("htmlString").Parse("{{.}}")
 	if err != nil {
 		return err
 	}
-	if (comp.Props["children"]) != nil {
-		children := comp.Props["children"].([]any)
-		for _, child := range children {
-			if child != nil {
-				switch childComp := child.(type) {
-				case Component:
-					err = RenderToString(wr, childComp)
-					if err != nil {
-						return err
-					}
-				case func() Component:
-					err = RenderToString(wr, childComp())
-					if err != nil {
-						return err
-					}
-				case <-chan Component:
-					err = RenderToString(wr, <-childComp)
-					if err != nil {
-						return err
-					}
-				case string:
-					err = childTpl.Execute(wr, child)
-					if err != nil {
-						return err
-					}
-				case template.HTML:
-					err = childTpl.Execute(wr, child)
-					if err != nil {
-						return err
-					}
-				default:
-					return fmt.Errorf("cannot convert prop (%v %T) to string for %v", childComp, childComp, comp)
+	for _, child := range children {
+		if child != nil {
+			switch childComp := child.(type) {
+			case Component:
+				err = RenderToString(wr, childComp)
+				if err != nil {
+					return err
 				}
+			case func() Component:
+				err = RenderToString(wr, childComp())
+				if err != nil {
+					return err
+				}
+			case <-chan Component:
+				err = RenderToString(wr, <-childComp)
+				if err != nil {
+					return err
+				}
+			case string:
+				err = childTpl.Execute(wr, child)
+				if err != nil {
+					return err
+				}
+			case template.HTML:
+				err = childTpl.Execute(wr, child)
+				if err != nil {
+					return err
+				}
+			default:
+				return fmt.Errorf("cannot convert prop (%v %T) to string", childComp, childComp)
 			}
 		}
 	}
-	wr.Write([]byte("</" + comp.Tag_type + ">"))
 	return nil
 }
