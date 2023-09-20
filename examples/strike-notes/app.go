@@ -173,15 +173,15 @@ func Page(url *url.URL, children Component) Component {
 }
 
 func bootstrap() []Component {
+	// "react": "https://esm.sh/react@canary?dev",
+	// "react-dom/client": "https://esm.sh/react-dom@canary/client?dev",
+	// "react/jsx-runtime": "https://esm.sh/react@canary/jsx-runtime?dev",
 	return []Component{
 		H("script", Props{"type": "importmap"}, []template.HTML{`
 			{
 				"imports": {
-					// "react": "https://esm.sh/react@canary?dev",
 					"react": "https://esm.sh/react@18.3.0-canary-2807d781a-20230918",
-					// "react-dom/client": "https://esm.sh/react-dom@canary/client?dev",
 					"react-dom/client": "https://esm.sh/react-dom@18.3.0-canary-2807d781a-20230918/client",
-					// "react/jsx-runtime": "https://esm.sh/react@canary/jsx-runtime?dev",
 					"react/jsx-runtime": "https://esm.sh/react@18.3.0-canary-2807d781a-20230918/jsx-runtime",
 					"react-error-boundary": "https://esm.sh/react-error-boundary@4.0.11"
 				}
@@ -198,16 +198,6 @@ func bootstrap() []Component {
 func App(url *url.URL, ctx context.Context) Component {
 	p := promise.NewPromise[Component](ctx)
 	p2 := promise.NewPromise[Component](ctx)
-	if useStreaming {
-		p.ResolveAsync(func() Component {
-			time.Sleep(1000 * time.Millisecond)
-			return H("div", "Hello, World!")
-		})
-		p2.ResolveAsync(func() Component {
-			time.Sleep(2000 * time.Millisecond)
-			return H("div", "Hello, World!")
-		})
-	}
 	return H("div", Props{"class": "main"},
 		H("section", Props{"class": "col sidebar"},
 			H("section", Props{"class": "sidebar-header"},
