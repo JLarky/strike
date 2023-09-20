@@ -7,7 +7,7 @@ export function StrikeSuspense(props) {
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
-  if (!props.canStream) {
+  if (props.cantStream) {
     return props.children;
   }
   if (!isMounted) {

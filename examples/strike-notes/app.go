@@ -18,7 +18,7 @@ import (
 	"github.com/JLarky/strike/pkg/suspense"
 )
 
-var useStreaming = false
+var useStreaming = true
 
 func main() {
 	http.Handle("/favicon.ico", http.FileServer(http.Dir("public")))
@@ -28,9 +28,12 @@ func main() {
 		handler.ServeHTTP(w, r)
 	}))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+		ctxOriginal := r.Context()
 
-		ctx, getChunkCh := promise.WithContext(ctx)
+		ctx, getChunkCh := promise.WithContext(ctxOriginal)
+		if !useStreaming {
+			ctx = ctxOriginal
+		}
 
 		fmt.Println("ctx", ctx)
 		flush := func() {
@@ -180,28 +183,17 @@ func bootstrap() []Component {
 
 func App(url *url.URL, ctx context.Context) Component {
 	p := promise.NewPromise[Component](ctx)
-	p.ResolveAsync(func() Component {
-		time.Sleep(1000 * time.Millisecond)
-		return H("div", "Hello, World!")
-	})
 	p2 := promise.NewPromise[Component](ctx)
-	p2.ResolveAsync(func() Component {
-		time.Sleep(2000 * time.Millisecond)
-		return H("div", "Hello, World!")
-	})
-	var nav Component
 	if useStreaming {
-		nav = H("nav", H(suspense.Suspense,
-			Props{"ctx": ctx},
-			Props{"fallback": noteListSkeleton(), "p": p, "p2": p2},
-			func() Component {
-				return nodeList(url)
-			},
-		))
-	} else {
-		nav = H("nav", nodeList(url))
+		p.ResolveAsync(func() Component {
+			time.Sleep(1000 * time.Millisecond)
+			return H("div", "Hello, World!")
+		})
+		p2.ResolveAsync(func() Component {
+			time.Sleep(2000 * time.Millisecond)
+			return H("div", "Hello, World!")
+		})
 	}
-
 	return H("div", Props{"class": "main"},
 		H("section", Props{"class": "col sidebar"},
 			H("section", Props{"class": "sidebar-header"},
@@ -212,7 +204,13 @@ func App(url *url.URL, ctx context.Context) Component {
 				searchField(url),
 				editButton(nil, "New"),
 			),
-			nav,
+			H("nav", H(suspense.Suspense,
+				Props{"ctx": ctx},
+				Props{"fallback": noteListSkeleton(), "p": p, "p2": p2},
+				func() Component {
+					return nodeList(url)
+				},
+			)),
 		),
 		H("section", Props{"class": "col note-viewer"},
 			H("div", Props{"class": "note--empty-state"},

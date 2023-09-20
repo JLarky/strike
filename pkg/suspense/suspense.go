@@ -23,15 +23,20 @@ func Suspense(comp h.Component) h.Component {
 		}
 	}
 
-	canStream := CanStream(comp)
-	comp.Props["canStream"] = canStream
-	comp.Props["fallback"] = nil
-
+	ctx, canStream := comp.Props["ctx"].(context.Context)
 	if !canStream {
-		children := comp.Props["children"].([]any)
-		for k, v := range children {
-			switch v := v.(type) {
-			case func() h.Component:
+		comp.Props["cantStream"] = true
+		comp.Props["fallback"] = nil
+	}
+	children := comp.Props["children"].([]any)
+	for k, v := range children {
+		switch v := v.(type) {
+		case func() h.Component:
+			if canStream {
+				p := promise.NewPromise[h.Component](ctx)
+				p.ResolveAsync(v)
+				children[k] = p
+			} else {
 				children[k] = v()
 			}
 		}
