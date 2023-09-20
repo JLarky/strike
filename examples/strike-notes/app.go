@@ -49,7 +49,6 @@ func main() {
 			ctx = ctxOriginal
 		}
 
-		fmt.Println("ctx", ctx)
 		flush := func() {
 			if f, ok := w.(http.Flusher); ok {
 				f.Flush()
@@ -196,6 +195,10 @@ func bootstrap() []Component {
 }
 
 func App(url *url.URL, ctx context.Context) Component {
+	props := Props{}
+	if useStreaming {
+		props["ctx"] = ctx
+	}
 	p := promise.NewPromise[Component](ctx)
 	p2 := promise.NewPromise[Component](ctx)
 	return H("div", Props{"class": "main"},
@@ -209,7 +212,7 @@ func App(url *url.URL, ctx context.Context) Component {
 				editButton(nil, "New"),
 			),
 			H("nav", H(suspense.Suspense,
-				Props{"ctx": ctx},
+				props,
 				Props{"fallback": noteListSkeleton(), "p": p, "p2": p2},
 				func() Component {
 					return nodeList(url)
