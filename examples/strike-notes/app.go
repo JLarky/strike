@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io/fs"
 	"log"
 	"net/http"
 	"net/url"
@@ -20,12 +22,24 @@ import (
 
 var useStreaming = true
 
+//go:embed public/*
+var static embed.FS
+
 func main() {
-	http.Handle("/favicon.ico", http.FileServer(http.Dir("public")))
+	http.Handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fSys, err := fs.Sub(static, "public")
+		if err != nil {
+			panic(err)
+		}
+		http.FileServer(http.FS(fSys)).ServeHTTP(w, r)
+	}))
 	http.Handle("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "public, max-age=86400")
-		handler := http.StripPrefix("/static/", http.FileServer(http.Dir("public")))
-		handler.ServeHTTP(w, r)
+		fSys, err := fs.Sub(static, "public")
+		if err != nil {
+			panic(err)
+		}
+		http.StripPrefix("/static/", http.FileServer(http.FS(fSys))).ServeHTTP(w, r)
 	}))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		ctxOriginal := r.Context()
