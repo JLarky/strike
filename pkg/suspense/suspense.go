@@ -42,6 +42,9 @@ func Suspense(comp h.Component) h.Component {
 		}
 	}
 
+	// we can't serialize ctx, so we remove it
+	delete(comp.Props, "ctx")
+
 	return comp
 }
 
@@ -50,5 +53,5 @@ func IsSuspense(comp h.Component) bool {
 }
 
 func CanStream(comp h.Component) bool {
-	return nil != comp.Props["ctx"]
+	return nil == comp.Props["cantStream"]
 }

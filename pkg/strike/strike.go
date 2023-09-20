@@ -75,7 +75,7 @@ func RenderToString(wr io.Writer, comp Component) error {
 		case Component:
 			return fmt.Errorf("you can only pass a component as a prop to Island or Suspense components. Error rendering component %v", comp)
 		default:
-			return fmt.Errorf("cannot convert prop %s (%v %T) to string", prop, value, value)
+			return fmt.Errorf("cannot convert prop \"%s\" (%v %T) to string", prop, value, value)
 		}
 
 		wr.Write([]byte(fmt.Sprintf(` %s="%s"`, html.EscapeString(prop), html.EscapeString(strValue))))
@@ -130,7 +130,7 @@ func RenderChildren(wr io.Writer, children []any) error {
 					return err
 				}
 			default:
-				return fmt.Errorf("cannot convert prop (%v %T) to string", childComp, childComp)
+				return fmt.Errorf("cannot convert child (%v %T) to string", childComp, childComp)
 			}
 		}
 	}
