@@ -1,10 +1,9 @@
 package db
 
 import (
+	_ "embed"
 	"encoding/json"
-	"io"
 	"math"
-	"os"
 	"strings"
 	"time"
 )
@@ -33,15 +32,12 @@ func SearchNotes(q string) ([]Note, error) {
 	return out, nil
 }
 
+//go:embed notes.json
+var jsonFile []byte
+
 func readNotes() ([]Note, error) {
-	jsonFile, err := os.Open("server/notes/notes.json")
-	if err != nil {
-		return []Note{}, err
-	}
-	defer jsonFile.Close()
-	byteValue, _ := io.ReadAll(jsonFile)
 	var notes []Note
-	err = json.Unmarshal(byteValue, &notes)
+	err := json.Unmarshal(jsonFile, &notes)
 	if err != nil {
 		return []Note{}, err
 	}
