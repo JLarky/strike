@@ -19,5 +19,14 @@ air
 Build jsx -> js (optional)
 
 ```bash
-while sleep 1; do (cd examples/strike-notes/public/ ;NODE_ENV=production bun build.ts); done
+while sleep 1; do (cd examples/strike-notes/public/; NODE_ENV=production bun build.ts); done
+```
+
+## Deploy
+
+- Install Fly
+
+```bash
+flyctl launch
+flyctl deploy
 ```
