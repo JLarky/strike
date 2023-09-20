@@ -89,15 +89,6 @@ func renderToString(c Component) string {
 	return buf.String()
 }
 
-func renderToStream(c Component) string {
-	buf := new(bytes.Buffer)
-	err := strike.RenderToString(buf, c)
-	if err != nil {
-		panic(err)
-	}
-	return buf.String()
-}
-
 // func TestAsync(t *testing.T) {
 // 	a := H("div", async.Async(func() Component {
 // 		time.Sleep(time.Millisecond * 100)
@@ -143,4 +134,41 @@ func TestSuspenseComponentWithChunks(t *testing.T) {
 	for chunk := range getChunkCh() {
 		assert.EqualJSON(t, `{"$strike":"promise-result","id":"1","result":{"$strike":"component","$type":"div","props":{"children":["Hello"]}}}`, chunk)
 	}
+}
+
+func noteListSkeleton() Component {
+	return H("div", H("ul", Props{"class": "notes-list skeleton-container"},
+		H("li", Props{"class": "v-stack"},
+			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height:84px"}),
+		),
+		H("li", Props{"class": "v-stack"},
+			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height:84px"}),
+		),
+		H("li", Props{"class": "v-stack"},
+			H("div", Props{"class": "sidebar-note-list-item skeleton", "style": "height:84px"}),
+		),
+	))
+}
+
+func Benchmark1(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		a := createChildren(100000)
+		_ = renderToString(a)
+	}
+}
+
+func Benchmark2(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		a := createChildren(100000)
+		_ = renderToString(a)
+	}
+}
+
+func createChildren(n int) Component {
+	children := make([]any, 0)
+	for j := 0; j < n; j++ {
+		children = append(children, noteListSkeleton())
+	}
+	return H("div", children)
 }

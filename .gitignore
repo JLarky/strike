@@ -2,3 +2,5 @@ build-errors.log
 /bin
 examples/*/bin
 .DS_Store
+cpu.prof
+mem.prof

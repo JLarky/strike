@@ -96,36 +96,34 @@ func RenderToString(wr io.Writer, comp Component) error {
 	return nil
 }
 
+var childTpl = template.Must(template.New("htmlString").Parse("{{.}}"))
+
 func RenderChildren(wr io.Writer, children []any) error {
-	childTpl, err := template.New("htmlString").Parse("{{.}}")
-	if err != nil {
-		return err
-	}
 	for _, child := range children {
 		if child != nil {
 			switch childComp := child.(type) {
 			case Component:
-				err = RenderToString(wr, childComp)
+				err := RenderToString(wr, childComp)
 				if err != nil {
 					return err
 				}
 			case func() Component:
-				err = RenderToString(wr, childComp())
+				err := RenderToString(wr, childComp())
 				if err != nil {
 					return err
 				}
 			case <-chan Component:
-				err = RenderToString(wr, <-childComp)
+				err := RenderToString(wr, <-childComp)
 				if err != nil {
 					return err
 				}
 			case string:
-				err = childTpl.Execute(wr, child)
+				err := childTpl.Execute(wr, child)
 				if err != nil {
 					return err
 				}
 			case template.HTML:
-				err = childTpl.Execute(wr, child)
+				err := childTpl.Execute(wr, child)
 				if err != nil {
 					return err
 				}
