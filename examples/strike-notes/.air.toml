@@ -1,20 +1,20 @@
-root = "."
+root = "../.."
 testdata_dir = "testdata"
 tmp_dir = "tmp"
 
 [build]
   args_bin = []
-  bin = "./bin/api"
-  cmd = "go build -o bin/api cmd/strike/main.go"
+  bin = "./tmp/main"
+  cmd = "go build -o ./tmp/main ."
   delay = 0
-  exclude_dir = ["assets", "tmp", "vendor", "testdata", "examples"]
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", "examples/strike-notes/public/node_modules", "examples/server-components-demo/node_modules"]
   exclude_file = []
   exclude_regex = ["_test.go"]
   exclude_unchanged = false
   follow_symlink = false
   full_bin = ""
   include_dir = []
-  include_ext = ["go", "tpl", "tmpl", "html", "js"]
+  include_ext = ["go", "tpl", "tmpl", "html"]
   include_file = []
   kill_delay = "0s"
   log = "build-errors.log"

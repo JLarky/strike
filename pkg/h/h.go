@@ -1,19 +1,50 @@
 package h
 
 import (
+	"encoding/json"
 	"fmt"
-
-	"github.com/JLarky/strike/pkg/strike"
+	"html/template"
 )
 
-type Component = strike.Component
-type Props = strike.Props
+type Component struct {
+	Tag_type string `json:"tag_type"`
+	Props    Props  `json:"props"`
+}
+
+func (c Component) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"$strike": "component",
+		"$type":   c.Tag_type,
+		"props":   c.Props,
+	})
+}
+
+// this is just for logs, this does not render to HTML
+func (c Component) String() string {
+	props := ""
+	if len(c.Props) > 0 {
+		for k, v := range c.Props {
+			props += fmt.Sprintf(" %v={%v}", k, v)
+		}
+	}
+	return fmt.Sprintf("<%v%s></%v>", c.Tag_type, props, c.Tag_type)
+}
+
+type Props map[string]any
 
 func H(tag any, rest ...any) Component {
 	props := make(map[string]any)
 	children := make([]any, 0)
 	for _, item := range rest {
 		switch item_type := item.(type) {
+		case []template.HTML:
+			for _, v := range item_type {
+				children = append(children, v)
+			}
+		case []Component:
+			for _, v := range item_type {
+				children = append(children, v)
+			}
 		case []any:
 			children = append(children, item_type...)
 		case Props:
@@ -25,10 +56,13 @@ func H(tag any, rest ...any) Component {
 		}
 	}
 
+	if len(children) > 0 {
+		props["children"] = children
+	}
+
 	comp := Component{
 		Tag_type: "",
 		Props:    props,
-		Children: children,
 	}
 
 	switch tag_type := tag.(type) {

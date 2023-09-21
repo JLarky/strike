@@ -10,9 +10,12 @@ import (
 	"net/http"
 	"sync/atomic"
 
+	"github.com/JLarky/strike/pkg/framework"
 	"github.com/JLarky/strike/pkg/h"
 	. "github.com/JLarky/strike/pkg/h"
+	"github.com/JLarky/strike/pkg/island"
 	"github.com/JLarky/strike/pkg/strike"
+	"github.com/JLarky/strike/pkg/strike_http"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -39,10 +42,10 @@ func NewRouter() *chi.Mux {
 	r.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("hello world 1123"))
 	})
-	r.Method("GET", "/client.js", Handler(staticHandler2))
-	r.Method("GET", "/islands.js", Handler(staticHandler2))
+	r.Method("GET", "/static/app/islands.js", Handler(staticHandler2))
 	r.Method("GET", "/", Handler(rscHandler))
 	r.Method("GET", "/about", Handler(rscHandler))
+	r.Method("GET", "/_strike/*", strike_http.NewHandler())
 
 	return r
 }
@@ -51,14 +54,8 @@ func NewRouter() *chi.Mux {
 var static embed.FS
 
 func staticHandler2(w http.ResponseWriter, r *http.Request) error {
-	q := r.URL.Query().Get("err")
-
-	if q != "" {
-		return errors.New(q)
-	}
-
 	w.Header().Set("Content-Type", "text/javascript")
-	f, err := static.ReadFile("static" + r.URL.Path)
+	f, err := static.ReadFile("static/app.js")
 	if err != nil {
 		return err
 	}
@@ -67,8 +64,8 @@ func staticHandler2(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func Island(componentName string, props Props, children ...any) Component {
-	return H("strike-island", props, Props{"component-export": componentName}, children)
+func Island(componentName string, props Props, fallback any) Component {
+	return H(island.Island, props, Props{"component-export": componentName, "ssrFallback": fallback})
 }
 
 var serverCounter uint64
@@ -87,7 +84,7 @@ func rscHandler(w http.ResponseWriter, r *http.Request) error {
 		island = Island(
 			"Counter",
 			Props{"serverCounter": serverCounter},
-			"Loading...",
+			H("span", "Loading..."),
 		)
 	} else {
 		c := atomic.AddUint64(&serverCounter, 1)
@@ -108,10 +105,12 @@ func rscHandler(w http.ResponseWriter, r *http.Request) error {
 	)
 
 	page := H("html", Props{"lang": "en"},
-		H("head", H("title", "Title "+r.URL.Path)),
+		H("head",
+			H("title", "Title "+r.URL.Path),
+			framework.Bootstrap(),
+		),
 		H("body",
 			body,
-			H("script", Props{"type": "module", "async": "", "src": "./client.js"}),
 		))
 
 	jsonData, err := json.Marshal(page)

@@ -1,0 +1,79 @@
+[
+  {
+    "id": 1,
+    "created_at": "2023-06-18T10:00:00Z",
+    "updated_at": "2023-06-18T10:00:00Z",
+    "title": "Eat some cheese.",
+    "body": "I've been dreaming of it lately. I think I'll go to the store and buy some. Gouda, maybe?"
+  },
+  {
+    "id": 2,
+    "created_at": "2023-06-18T10:15:00Z",
+    "updated_at": "2023-06-18T10:15:00Z",
+    "title": "Cloud Mountains",
+    "body": "Do you ever wonder if clouds get tired of floating around all day? Maybe they take naps on mountains. That would explain why some mountains look so fluffy."
+  },
+  {
+    "id": 3,
+    "created_at": "2023-06-18T10:30:00Z",
+    "updated_at": "2023-06-18T10:30:00Z",
+    "title": "Meow Revolution",
+    "body": "If cats could talk, would they have a secret language? Maybe they communicate through purrs and meows, exchanging information about the best hiding spots for treats."
+  },
+  {
+    "id": 4,
+    "created_at": "2023-06-18T10:45:00Z",
+    "updated_at": "2023-06-18T10:45:00Z",
+    "title": "Sock Heartbreak",
+    "body": "What if socks have feelings and get sad when they're separated from their sock pairs? We should always keep them together to prevent sock heartbreak."
+  },
+  {
+    "id": 5,
+    "created_at": "2023-06-18T11:00:00Z",
+    "updated_at": "2023-06-18T11:00:00Z",
+    "title": "Text Messages",
+    "body": "Have you ever noticed that when you're waiting for a text message, time slows down? It's like the universe is conspiring to make you check your phone every five seconds."
+  },
+  {
+    "id": 6,
+    "created_at": "2023-06-18T11:15:00Z",
+    "updated_at": "2023-06-18T11:15:00Z",
+    "title": "Gravity Prank",
+    "body": "What if gravity is just a big cosmic prank, and one day it will suddenly switch directions? We'll all be floating around like balloons!"
+  },
+  {
+    "id": 7,
+    "created_at": "2023-06-18T11:30:00Z",
+    "updated_at": "2023-06-18T11:30:00Z",
+    "title": "Dancing Trees",
+    "body": "Imagine if trees could dance. The forest would become a lively disco, with trees swaying to the rhythm of the wind. Nature's very own dance party!"
+  },
+  {
+    "id": 8,
+    "created_at": "2023-06-18T11:45:00Z",
+    "updated_at": "2023-06-18T11:45:00Z",
+    "title": "Mirror Universe",
+    "body": "What if mirrors are portals to alternate universes, and our reflections are just versions of ourselves in those parallel worlds? Maybe they're trying to send us messages."
+  },
+  {
+    "id": 9,
+    "created_at": "2023-06-18T12:00:00Z",
+    "updated_at": "2023-06-19T15:00:12.334Z",
+    "title": "Book Characters!!?",
+    "body": "What if we're all just characters in a book, and our lives are being written by someone else? Maybe we're just figments of someone's imagination."
+  },
+  {
+    "id": 10,
+    "created_at": "2023-06-18T12:15:00Z",
+    "updated_at": "2023-06-18T12:15:00Z",
+    "title": "Dog Walk",
+    "body": "I think I'll go for a walk today. It's such a nice day outside, and the sun is shining brightly. I'll bring my dog with me, too."
+  },
+  {
+    "title": "Dragon Heart",
+    "body": "I will eat it with my *GLOVED* hands (it is very hot.)",
+    "id": 11,
+    "created_at": "2023-06-19T02:20:27.518Z",
+    "updated_at": "2023-06-19T02:25:18.914Z"
+  }
+]

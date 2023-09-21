@@ -13,5 +13,27 @@ go run .
 Or
 
 ```bash
-air --build.cmd "go build -o bin/app app.go" --build.bin ./bin/app
+air
+```
+
+Build jsx -> js (optional)
+
+```bash
+while sleep 1; do (cd examples/strike-notes/public/; NODE_ENV=production bun build.ts); done
+```
+
+## Deploy
+
+- Install Fly
+
+```bash
+flyctl launch
+flyctl deploy
+```
+
+## Profiling
+
+```
+plow http://127.0.0.1:8080/ -c 500 -n 200000 -d 10s
+go tool pprof -http :8888 http://:8080/debug/pprof/profile?seconds=5
 ```
