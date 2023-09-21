@@ -46,7 +46,7 @@ export function chunkToJSX(ctx, x) {
   return parsed;
 }
 
-/** @type {import("./rsc").createRemotePromise}*/
+/** @type {import("./rsc.js").createRemotePromise}*/
 function createRemotePromise(id) {
   /** @type {(value: any) => void} */
   let resolve = () => {};
@@ -58,7 +58,7 @@ function createRemotePromise(id) {
   return { id, promise, resolve, reject };
 }
 
-/** @type {import("./rsc").remotePromiseFromCtx}*/
+/** @type {import("./rsc.js").remotePromiseFromCtx}*/
 function remotePromiseFromCtx(ctx, id) {
   let remote = ctx.promises.get(id);
   if (!remote) {
@@ -68,7 +68,7 @@ function remotePromiseFromCtx(ctx, id) {
   return remote;
 }
 
-/** @type {import("./rsc").promisify}*/
+/** @type {import("./rsc.js").promisify}*/
 function promisify(obj, promise) {
   obj.__proto__ = promise.__proto__;
   obj.promise = promise;
@@ -77,7 +77,7 @@ function promisify(obj, promise) {
   obj.finally = promise.finally.bind(promise);
 }
 
-/** @type {import("./rsc").parseModelString} */
+/** @type {import("./rsc.js").parseModelString} */
 function parseModelString(ctx, parent, key, value) {
   if (key === "$strike" && value === "promise-result") {
     const remote = remotePromiseFromCtx(ctx, parent.id);

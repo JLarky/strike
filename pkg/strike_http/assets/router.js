@@ -6,7 +6,7 @@ import { jsx } from "react/jsx-runtime";
 /** @type {import("./react").useState} */
 const useState = React.useState;
 
-/** @type {import("./router").Router} */
+/** @type {import("./router.js").Router} */
 export function Router() {
   const [router, setRouter] = useState(() =>
     createRouterState(window.location.pathname + window.location.search)
@@ -21,7 +21,7 @@ export function Router() {
   });
 }
 
-/** @type {import("./router").createRouterState} */
+/** @type {import("./router.js").createRouterState} */
 function createRouterState(href) {
   // compare this to https://github.com/vercel/next.js/blob/c6c38916882e419d9c4babdd9223339094fff1c3/packages/next-swc/crates/next-core/js/src/entry/app/hydrate.tsx#L130
 
@@ -39,14 +39,14 @@ function createRouterState(href) {
   return { href, isInitial: true, key: "initial" };
 }
 
-/** @type {import("./router").changeRouterState} */
+/** @type {import("./router.js").changeRouterState} */
 function changeRouterState(href, key) {
   return { href, isInitial: false, key };
 }
 
-/** @type {import("./router").addNavigation} */
+/** @type {import("./router.js").addNavigation} */
 function addNavigation(setRouter) {
-  /** @type {import("./router").navigate} */
+  /** @type {import("./router.js").navigate} */
   function navigate(href) {
     React.startTransition(() => {
       // invalidate the cache on every navigation

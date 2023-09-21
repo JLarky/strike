@@ -1,10 +1,6 @@
-import * as islands from "./islands.js";
+import * as islands from "strike_islands";
 import React from "react";
 import { jsx, jsxs } from "react/jsx-runtime";
-
-export { default as EditButton } from "../app/EditButton.js";
-export { default as SearchField } from "../app/SearchField.js";
-export { default as SidebarNoteContent } from "../app/SidebarNoteContent.js";
 
 export function StrikeIsland(props) {
   const { "component-export": exportName, ssrFallback, ...rest } = props;

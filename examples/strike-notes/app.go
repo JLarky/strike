@@ -19,6 +19,7 @@ import (
 	"github.com/JLarky/strike/pkg/island"
 	"github.com/JLarky/strike/pkg/promise"
 	"github.com/JLarky/strike/pkg/strike"
+	"github.com/JLarky/strike/pkg/strike_http"
 	"github.com/JLarky/strike/pkg/suspense"
 )
 
@@ -35,6 +36,7 @@ func main() {
 		}
 		http.FileServer(http.FS(fSys)).ServeHTTP(w, r)
 	}))
+	http.Handle("/_strike/", strike_http.NewHandler())
 	http.Handle("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "public, max-age=86400")
 		fSys, err := fs.Sub(static, "public")
@@ -181,18 +183,19 @@ func bootstrap() []Component {
 		H("script", Props{"type": "importmap"}, []template.HTML{`
 			{
 				"imports": {
+					"strike_islands": "/static/app/islands.js",
 					"react": "https://esm.sh/react@18.3.0-canary-2807d781a-20230918",
 					"react-dom/client": "https://esm.sh/react-dom@18.3.0-canary-2807d781a-20230918/client",
 					"react/jsx-runtime": "https://esm.sh/react@18.3.0-canary-2807d781a-20230918/jsx-runtime",
 					"react-error-boundary": "https://esm.sh/react-error-boundary@4.0.11"
 				}
 			}`}),
-		H("link", Props{"rel": "modulepreload", "href": "/static/strike/bootstrap.js"}),
+		H("link", Props{"rel": "modulepreload", "href": "/_strike/bootstrap.js"}),
 		H("link", Props{"rel": "modulepreload", "href": "https://esm.sh/v132/react-error-boundary@4.0.11/es2022/react-error-boundary.mjs"}),
 		H("link", Props{"rel": "modulepreload", "href": "https://esm.sh/react-error-boundary@4.0.11"}),
 		H("link", Props{"rel": "modulepreload", "href": "https://esm.sh/react@18.3.0-canary-2807d781a-20230918?dev"}),
 		H("link", Props{"rel": "modulepreload", "href": "https://esm.sh/react-dom@18.3.0-canary-2807d781a-20230918/client"}),
-		H("script", Props{"async": "async", "type": "module", "src": "/static/strike/bootstrap.js"}),
+		H("script", Props{"async": "async", "type": "module", "src": "/_strike/bootstrap.js"}),
 	}
 }
 
