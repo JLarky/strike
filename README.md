@@ -53,6 +53,11 @@ This was built in public, you can watch it in the [YT Playlist](https://youtube.
 - [pprof README](https://github.com/google/pprof/blob/main/doc/README.md)
 - [pprof package](https://pkg.go.dev/runtime/pprof)
 - [profiling](https://hackernoon.com/go-the-complete-guide-to-profiling-your-code-h51r3waz)
+
+For load testing:
+- sudo ulimit -n 6049
+- sudo sysctl -w kern.ipc.somaxconn=1024
+- [source](https://github.com/golang/go/issues/20960#issuecomment-465998114)
 </details>
 
 ```

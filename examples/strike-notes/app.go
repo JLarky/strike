@@ -12,6 +12,8 @@ import (
 	"net/url"
 	"time"
 
+	_ "net/http/pprof"
+
 	"github.com/JLarky/strike-notes/server/db"
 	. "github.com/JLarky/strike/pkg/h"
 	"github.com/JLarky/strike/pkg/island"
