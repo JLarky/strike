@@ -15,6 +15,7 @@ import (
 	_ "net/http/pprof"
 
 	"github.com/JLarky/strike-notes/server/db"
+	"github.com/JLarky/strike/pkg/framework"
 	. "github.com/JLarky/strike/pkg/h"
 	"github.com/JLarky/strike/pkg/island"
 	"github.com/JLarky/strike/pkg/promise"
@@ -167,36 +168,12 @@ func Page(url *url.URL, children Component) Component {
 			H("meta", Props{"name": "viewport", "content": "width=device-width, initial-scale=1"}),
 			H("link", Props{"rel": "stylesheet", "href": "/static/style.css"}),
 			H("title", "React Notes"),
-			bootstrap(),
+			framework.Bootstrap(),
 		),
 		H("body",
 			children,
 		),
 	)
-}
-
-func bootstrap() []Component {
-	// "react": "https://esm.sh/react@canary?dev",
-	// "react-dom/client": "https://esm.sh/react-dom@canary/client?dev",
-	// "react/jsx-runtime": "https://esm.sh/react@canary/jsx-runtime?dev",
-	return []Component{
-		H("script", Props{"type": "importmap"}, []template.HTML{`
-			{
-				"imports": {
-					"strike_islands": "/static/app/islands.js",
-					"react": "https://esm.sh/react@18.3.0-canary-2807d781a-20230918",
-					"react-dom/client": "https://esm.sh/react-dom@18.3.0-canary-2807d781a-20230918/client",
-					"react/jsx-runtime": "https://esm.sh/react@18.3.0-canary-2807d781a-20230918/jsx-runtime",
-					"react-error-boundary": "https://esm.sh/react-error-boundary@4.0.11"
-				}
-			}`}),
-		H("link", Props{"rel": "modulepreload", "href": "/_strike/bootstrap.js"}),
-		H("link", Props{"rel": "modulepreload", "href": "https://esm.sh/v132/react-error-boundary@4.0.11/es2022/react-error-boundary.mjs"}),
-		H("link", Props{"rel": "modulepreload", "href": "https://esm.sh/react-error-boundary@4.0.11"}),
-		H("link", Props{"rel": "modulepreload", "href": "https://esm.sh/react@18.3.0-canary-2807d781a-20230918?dev"}),
-		H("link", Props{"rel": "modulepreload", "href": "https://esm.sh/react-dom@18.3.0-canary-2807d781a-20230918/client"}),
-		H("script", Props{"async": "async", "type": "module", "src": "/_strike/bootstrap.js"}),
-	}
 }
 
 func App(url *url.URL, ctx context.Context) Component {
