@@ -19,7 +19,7 @@ air
 Build jsx -> js (optional)
 
 ```bash
-while sleep 1; do (cd examples/strike-notes/public/; NODE_ENV=production bun build.ts); done
+(cd examples/strike-notes/public/; NODE_ENV=production bun --watch build.ts)
 ```
 
 ## Deploy
