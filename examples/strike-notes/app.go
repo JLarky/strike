@@ -15,6 +15,7 @@ import (
 	_ "net/http/pprof"
 
 	"github.com/JLarky/strike-notes/server/db"
+	"github.com/JLarky/strike/pkg/action"
 	"github.com/JLarky/strike/pkg/framework"
 	. "github.com/JLarky/strike/pkg/h"
 	"github.com/JLarky/strike/pkg/island"
@@ -29,7 +30,14 @@ var useStreaming = true
 //go:embed public/*
 var static embed.FS
 
+var serverActions = action.NewServerActions()
+
 func main() {
+	serverActions.Register("test123", action.ActionFunc(func(ctx context.Context, args url.Values) (any, error) {
+		fmt.Println("test123", args)
+		return "echo stuff", nil
+	}))
+
 	http.Handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fSys, err := fs.Sub(static, "public")
 		if err != nil {
@@ -58,6 +66,18 @@ func main() {
 			if f, ok := w.(http.Flusher); ok {
 				f.Flush()
 			}
+		}
+
+		// debug POST
+		if r.Method == "POST" {
+			r.ParseMultipartForm(10 << 20)
+			action, err := serverActions.ConsumeForm(r.PostForm)
+			if err != nil {
+				fmt.Printf("Error consuming form: %v", err)
+				return
+			}
+			action.Action(ctx, r.PostForm)
+			fmt.Println(action)
 		}
 
 		page := Page(
@@ -200,6 +220,13 @@ func App(url *url.URL, ctx context.Context) Component {
 					return nodeList(url)
 				},
 			)),
+		),
+		H(action.Form, Props{"action": serverActions.GetOrFail("test123")},
+			H("input", Props{"type": "text", "name": "test"}),
+			H(island.Island, Props{"component-export": "SubmitButton"},
+				Props{"myAct": serverActions.GetOrFail("test123")},
+				H("button", Props{"type": "submit"}, "Submit"),
+			),
 		),
 		H("section", Props{"class": "col note-viewer"},
 			H("div", Props{"class": "note--empty-state"},
