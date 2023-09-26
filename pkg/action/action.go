@@ -54,7 +54,7 @@ func (s *ServerActions) ConsumeForm(form url.Values) (Action, error) {
 	if val, ok := s.actionMap[actionId]; ok {
 		return val, nil
 	} else {
-		return Action{}, fmt.Errorf("action not found: %s", actionId)
+		return Action{}, fmt.Errorf("action (%s) not found: %v", actionId, form)
 	}
 }
 

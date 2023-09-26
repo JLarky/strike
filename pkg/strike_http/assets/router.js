@@ -18,6 +18,7 @@ export function Router() {
     isInitial: router.isInitial,
     url: router.href,
     routerKey: router.key,
+    actionData: router.actionData,
   });
 }
 
@@ -44,6 +45,11 @@ function changeRouterState(href, key) {
   return { href, isInitial: false, key };
 }
 
+/** @type {import("./router.js").changeRouterStateForAction} */
+function changeRouterStateForAction(href, key, actionData) {
+  return { href, isInitial: false, key, actionData };
+}
+
 /** @type {import("./router.js").addNavigation} */
 function addNavigation(setRouter) {
   /** @type {import("./router.js").navigate} */
@@ -51,6 +57,15 @@ function addNavigation(setRouter) {
     React.startTransition(() => {
       // invalidate the cache on every navigation
       setRouter(changeRouterState(href, "" + Math.random()));
+    });
+  }
+  /** @type {import("./router.js").submitForm} */
+  function submitForm(actionData) {
+    React.startTransition(() => {
+      // invalidate the cache on every navigation
+      setRouter((x) =>
+        changeRouterStateForAction(x.href, "" + Math.random(), actionData)
+      );
     });
   }
 
@@ -80,5 +95,8 @@ function addNavigation(setRouter) {
   window.__rscNav = (href) => {
     window.history.pushState(null, "", href);
     navigate(href);
+  };
+  window.__rscAction = (actionId, data) => {
+    submitForm({ actionId, data });
   };
 }

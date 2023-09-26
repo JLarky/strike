@@ -25,6 +25,8 @@ import (
 	"github.com/JLarky/strike/pkg/suspense"
 )
 
+var lastForm = ""
+
 var useStreaming = true
 
 //go:embed public/*
@@ -34,6 +36,7 @@ var serverActions = action.NewServerActions()
 
 func main() {
 	serverActions.Register("test123", action.ActionFunc(func(ctx context.Context, args url.Values) (any, error) {
+		lastForm = fmt.Sprintf("%v", args)
 		fmt.Println("test123", args)
 		return "echo stuff", nil
 	}))
@@ -76,8 +79,9 @@ func main() {
 				fmt.Printf("Error consuming form: %v", err)
 				return
 			}
-			action.Action(ctx, r.PostForm)
-			fmt.Println(action)
+			data, err := action.Action(ctx, r.PostForm)
+			// FIXME: we will ignore data returned from the action, later we want to be able to stream that data back to the action function
+			fmt.Println(action, data, err)
 		}
 
 		page := Page(
@@ -230,7 +234,7 @@ func App(url *url.URL, ctx context.Context) Component {
 		),
 		H("section", Props{"class": "col note-viewer"},
 			H("div", Props{"class": "note--empty-state"},
-				H("span", Props{"class": "note-text--empty-state"}, "Click a note on the left to view something! 🥺"+url.String()),
+				H("span", Props{"class": "note-text--empty-state"}, "Click a note on the left to view something! 🥺"+url.String()+lastForm),
 			),
 		),
 		// 	<Suspense fallback={<NoteSkeleton isEditing={isEditing} />}>

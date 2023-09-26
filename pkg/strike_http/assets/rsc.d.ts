@@ -19,3 +19,4 @@ export function parseModelString(
 ): any;
 
 function promisify(obj: { [key: string]: any }, promise): void {}
+function actionify(obj: { [key: string]: any }): void {}

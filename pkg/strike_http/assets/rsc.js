@@ -4,9 +4,12 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import { StrikeIsland } from "./islands.js";
 import { StrikeSuspense } from "./suspense.js";
 
-export function RscComponent({ isInitial, url, routerKey }) {
+export function RscComponent({ isInitial, url, routerKey, actionData }) {
   if (isInitial) {
     return waitForInitialJSX();
+  }
+  if (actionData) {
+    return fetchClientJSXFromAction(url, routerKey, actionData);
   }
   // return React.use(fetchClientJSX(url, routerKey));
   // Error: Support for `use` not yet implemented in react-debug-tools.
@@ -23,6 +26,36 @@ const fetchClientJSX = React.cache(async function fetchClientJSX(href, key) {
     headers: { RSC: "1" },
   });
 
+  const chunks = readLines(response);
+  return await chunksToJSX(chunks);
+});
+
+const fetchClientJSXFromAction = React.cache(async function fetchClientJSX(
+  href,
+  key,
+  actionData
+) {
+  const { actionId, data } = actionData;
+  // convert everything to FormData
+  /** @type {FormData | undefined} */
+  let formData = data instanceof FormData ? data : undefined;
+  if (!formData) {
+    formData = new FormData();
+    if (data !== undefined) {
+      formData.append("data", JSON.stringify(data));
+    }
+  }
+  for (const k of formData.keys()) {
+    if (k.startsWith("$ACTION_ID_")) {
+      formData.delete(k);
+    }
+  }
+  formData.append("$ACTION_ID_" + actionId, "");
+  const response = await fetch(href, {
+    method: "POST",
+    headers: { RSC: "1" },
+    body: formData,
+  });
   const chunks = readLines(response);
   return await chunksToJSX(chunks);
 });
@@ -77,9 +110,18 @@ function promisify(obj, promise) {
   obj.finally = promise.finally.bind(promise);
 }
 
+/** @type {import("./rsc.js").actionify}*/
+function actionify(obj) {
+  obj.action = function (formData) {
+    __rscAction(obj.id, formData);
+  };
+}
+
 /** @type {import("./rsc.js").parseModelString} */
 function parseModelString(ctx, parent, key, value) {
-  if (key === "$strike" && value === "promise-result") {
+  if (key === "$strike" && value === "action") {
+    actionify(parent);
+  } else if (key === "$strike" && value === "promise-result") {
     const remote = remotePromiseFromCtx(ctx, parent.id);
     remote.resolve(parent.result);
   } else if (key === "$strike" && value === "promise") {
