@@ -22,6 +22,7 @@ func Form(comp h.Component) h.Component {
 	}
 	if val, ok := comp.Props["action"].(Action); ok {
 		delete(comp.Props, "action")
+		comp.Props["data-$strike-action"] = val.ToActionName()
 		if children, ok := comp.Props["children"].([]any); ok {
 			comp.Props["children"] = append(children, h.H(HiddenInput, h.Props{"name": val}))
 		} else {

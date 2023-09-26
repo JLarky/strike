@@ -111,16 +111,24 @@ function promisify(obj, promise) {
 }
 
 /** @type {import("./rsc.js").actionify}*/
-function actionify(obj) {
+function actionify(obj, actionId) {
   obj.action = function (formData) {
-    __rscAction(obj.id, formData);
+    __rscAction(actionId, formData);
   };
 }
 
 /** @type {import("./rsc.js").parseModelString} */
 function parseModelString(ctx, parent, key, value) {
+  if (
+    key === "data-$strike-action" &&
+    typeof value === "string" &&
+    value.startsWith("$ACTION_ID_")
+  ) {
+    const actionId = value.substring("$ACTION_ID_".length);
+    actionify(parent, actionId);
+  }
   if (key === "$strike" && value === "action") {
-    actionify(parent);
+    actionify(parent, parent.id);
   } else if (key === "$strike" && value === "promise-result") {
     const remote = remotePromiseFromCtx(ctx, parent.id);
     remote.resolve(parent.result);

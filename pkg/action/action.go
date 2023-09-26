@@ -62,6 +62,10 @@ func (a Action) String() string {
 	return fmt.Sprintf("Action(%s)", a.Id)
 }
 
+func (a Action) ToActionName() string {
+	return "$ACTION_ID_" + a.Id
+}
+
 func (a Action) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]any{
 		"$strike": "action",

@@ -16,7 +16,7 @@ func HiddenInput(comp h.Component) h.Component {
 		log.Println("name is required for hidden input")
 	}
 	if val, ok := comp.Props["name"].(Action); ok {
-		comp.Props["name"] = "$ACTION_ID_" + val.Id
+		comp.Props["name"] = val.ToActionName()
 	} else {
 		log.Println("prop `name` must be an action")
 	}
