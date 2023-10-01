@@ -4,6 +4,7 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import { StrikeIsland } from "./islands.js";
 import { StrikeSuspense } from "./suspense.js";
 
+/** @type {import("./rsc").RscComponent} */
 export function RscComponent({ isInitial, url, routerKey, actionData }) {
   if (isInitial) {
     return waitForInitialJSX();
@@ -79,7 +80,7 @@ export function chunkToJSX(ctx, x) {
   return parsed;
 }
 
-/** @type {import("./rsc.js").createRemotePromise}*/
+/** @type {import("./rsc").createRemotePromise}*/
 function createRemotePromise(id) {
   /** @type {(value: any) => void} */
   let resolve = () => {};
@@ -91,7 +92,7 @@ function createRemotePromise(id) {
   return { id, promise, resolve, reject };
 }
 
-/** @type {import("./rsc.js").remotePromiseFromCtx}*/
+/** @type {import("./rsc").remotePromiseFromCtx}*/
 function remotePromiseFromCtx(ctx, id) {
   let remote = ctx.promises.get(id);
   if (!remote) {
@@ -101,7 +102,7 @@ function remotePromiseFromCtx(ctx, id) {
   return remote;
 }
 
-/** @type {import("./rsc.js").promisify}*/
+/** @type {import("./rsc").promisify}*/
 function promisify(obj, promise) {
   obj.__proto__ = promise.__proto__;
   obj.promise = promise;
@@ -110,14 +111,15 @@ function promisify(obj, promise) {
   obj.finally = promise.finally.bind(promise);
 }
 
-/** @type {import("./rsc.js").actionify}*/
+/** @type {import("./rsc").actionify}*/
 function actionify(obj, actionId) {
-  obj.action = function (formData) {
+  obj.action = async function (formData) {
     __rscAction(actionId, formData);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   };
 }
 
-/** @type {import("./rsc.js").parseModelString} */
+/** @type {import("./rsc").parseModelString} */
 function parseModelString(ctx, parent, key, value) {
   if (
     key === "data-$strike-action" &&

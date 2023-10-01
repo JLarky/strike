@@ -1,4 +1,4 @@
-export function Router(): JSX.Element;
+export declare function Router(): JSX.Element;
 
 export type ActionData = {
   actionId: string;
@@ -12,22 +12,24 @@ export type RouterState = {
   actionData?: ActionData;
 };
 
-export function createRouterState(href: string): RouterState;
-export function changeRouterState(href: string, key: string): RouterState;
-export function changeRouterStateForAction(
+export declare function createRouterState(href: string): RouterState;
+export declare function changeRouterState(
+  href: string,
+  key: string
+): RouterState;
+export declare function changeRouterStateForAction(
   href: string,
   key: string,
   actionData: ActionData
 ): RouterState;
 
-export function addNavigation(
+export declare function addNavigation(
   setRouter: (
     router: RouterState | ((router: RouterState) => RouterState)
   ) => void
 ): void;
-jsxs;
-export function navigate(href: string): void;
-export function submitForm(actionData: ActionData): void;
+export declare function navigate(href: string): void;
+export declare function submitForm(actionData: ActionData): void;
 
 declare global {
   interface Window {
