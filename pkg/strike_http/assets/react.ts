@@ -1,7 +1,9 @@
-export function useState<T>(
+export declare function useState<T>(
   initialValue: () => T
 ): [T, (newValue: T | ((oldValue: T) => T)) => void];
-export function useState<T>(initialValue: T): [T, (newValue: T) => void];
+export declare function useState<T>(
+  initialValue: T
+): [T, (newValue: T) => void];
 
 declare module "react/jsx-runtime" {
   export function jsx(
