@@ -23,7 +23,10 @@ export declare function parseModelString(
   value: string
 ): any;
 
-export declare function promisify(obj: { [key: string]: any }, promise): void;
+export declare function promisify<T>(
+  obj: { [key: string]: any },
+  promise: Promise<T>
+): void;
 export declare function actionify(
   obj: { [key: string]: any },
   actionId: string

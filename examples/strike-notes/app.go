@@ -38,7 +38,12 @@ func main() {
 	serverActions.Register("test123", action.ActionFunc(func(ctx context.Context, args url.Values) (any, error) {
 		lastForm = fmt.Sprintf("%v", args)
 		fmt.Println("test123", args)
-		return "echo stuff", nil
+		promise := promise.NewPromise[any](ctx)
+		promise.ResolveAsync(func() any {
+			time.Sleep(1000 * time.Millisecond)
+			return "data"
+		})
+		return promise, nil
 	}))
 
 	http.Handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -79,8 +84,11 @@ func main() {
 				fmt.Printf("Error consuming form: %v", err)
 				return
 			}
+			promise := promise.NewPromise[any](ctx)
+			promise.PromiseId = action.ToActionName()
 			data, err := action.Action(ctx, r.PostForm)
-			// FIXME: we will ignore data returned from the action, later we want to be able to stream that data back to the action function
+			promise.ResolveAsync(func() any { return data })
+			// FIXME: send errors to client
 			fmt.Println(action, data, err)
 		}
 

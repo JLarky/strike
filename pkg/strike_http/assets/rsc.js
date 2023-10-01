@@ -34,9 +34,10 @@ const fetchClientJSX = React.cache(async function fetchClientJSX(href, key) {
 const fetchClientJSXFromAction = React.cache(async function fetchClientJSX(
   href,
   key,
+  /** @type {import("./router").ActionData} */
   actionData
 ) {
-  const { actionId, data } = actionData;
+  const { actionId, data, remotePromise } = actionData;
   // convert everything to FormData
   /** @type {FormData | undefined} */
   let formData = data instanceof FormData ? data : undefined;
@@ -51,18 +52,24 @@ const fetchClientJSXFromAction = React.cache(async function fetchClientJSX(
       formData.delete(k);
     }
   }
-  formData.append("$ACTION_ID_" + actionId, "");
+  const actionName = "$ACTION_ID_" + actionId;
+  formData.append(actionName, "");
   const response = await fetch(href, {
     method: "POST",
     headers: { RSC: "1" },
     body: formData,
   });
   const chunks = readLines(response);
-  return await chunksToJSX(chunks);
+  const ctx = newContext();
+  ctx.promises.set(actionName, remotePromise);
+  return await chunksToJSX(chunks, ctx);
 });
 
-async function chunksToJSX(chunks) {
-  const ctx = { promises: new Map() };
+function newContext() {
+  return { promises: new Map() };
+}
+
+async function chunksToJSX(chunks, ctx = newContext()) {
   const root = await chunks.next().then((x) => chunkToJSX(ctx, x.value));
   (async () => {
     for await (const line of chunks) {
@@ -81,7 +88,7 @@ export function chunkToJSX(ctx, x) {
 }
 
 /** @type {import("./rsc").createRemotePromise}*/
-function createRemotePromise(id) {
+export function createRemotePromise(id) {
   /** @type {(value: any) => void} */
   let resolve = () => {};
   let reject = () => {};
@@ -113,9 +120,8 @@ function promisify(obj, promise) {
 
 /** @type {import("./rsc").actionify}*/
 function actionify(obj, actionId) {
-  obj.action = async function (formData) {
-    __rscAction(actionId, formData);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+  obj.action = function (formData) {
+    return window.__rscAction(actionId, formData);
   };
 }
 

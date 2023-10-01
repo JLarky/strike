@@ -1,8 +1,11 @@
+import type { RemotePromise } from "./rsc";
+
 export declare function Router(): JSX.Element;
 
 export type ActionData = {
   actionId: string;
   data: any;
+  remotePromise: RemotePromise;
 };
 
 export type RouterState = {
@@ -35,6 +38,9 @@ declare global {
   interface Window {
     __rsc: any;
     __rscNav: (pathname: string) => void;
-    __rscAction: (formAction: string, formData: FormData | undefined) => void;
+    __rscAction: <T>(
+      formAction: string,
+      formData: FormData | undefined
+    ) => Promise<T>;
   }
 }

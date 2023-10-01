@@ -1,5 +1,5 @@
 // @ts-check
-import { RscComponent } from "./rsc.js";
+import { RscComponent, createRemotePromise } from "./rsc.js";
 import React from "react";
 import { jsx } from "react/jsx-runtime";
 
@@ -96,7 +96,10 @@ function addNavigation(setRouter) {
     window.history.pushState(null, "", href);
     navigate(href);
   };
+  /** @type {typeof window.__rscAction} */
   window.__rscAction = (actionId, data) => {
-    submitForm({ actionId, data });
+    const remotePromise = createRemotePromise("$ACTION_ID_" + actionId);
+    submitForm({ actionId, data, remotePromise });
+    return remotePromise.promise;
   };
 }
