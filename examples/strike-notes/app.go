@@ -3,9 +3,7 @@ package main
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"fmt"
-	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
@@ -35,17 +33,6 @@ var static embed.FS
 var serverActions = action.NewServerActions()
 
 func main() {
-	serverActions.Register("test123", action.ActionFunc(func(ctx context.Context, args url.Values) (any, error) {
-		lastForm = fmt.Sprintf("%v", args)
-		fmt.Println("test123", args)
-		promise := promise.NewPromise[any](ctx)
-		promise.ResolveAsync(func() any {
-			time.Sleep(1000 * time.Millisecond)
-			return "data"
-		})
-		return promise, nil
-	}))
-
 	http.Handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fSys, err := fs.Sub(static, "public")
 		if err != nil {
@@ -62,129 +49,19 @@ func main() {
 		}
 		http.StripPrefix("/static/", http.FileServer(http.FS(fSys))).ServeHTTP(w, r)
 	}))
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		ctxOriginal := r.Context()
-
-		ctx, getChunkCh := promise.WithContext(ctxOriginal)
-		if !useStreaming {
-			ctx = ctxOriginal
-		}
-
-		flush := func() {
-			if f, ok := w.(http.Flusher); ok {
-				f.Flush()
-			}
-		}
-
-		// debug POST
-		if r.Method == "POST" {
-			r.ParseMultipartForm(10 << 20)
-			action, err := serverActions.ConsumeForm(r.PostForm)
-			if err != nil {
-				fmt.Printf("Error consuming form: %v", err)
-				return
-			}
-			promise := promise.NewPromise[any](ctx)
-			promise.PromiseId = action.ToActionName()
-			data, err := action.Action(ctx, r.PostForm)
-			promise.ResolveAsync(func() any { return data })
-			// FIXME: send errors to client
-			fmt.Println(action, data, err)
-		}
-
-		page := Page(
-			r.URL,
-			App(r.URL, ctx),
-		)
-
-		rsc := r.Header.Get("RSC")
-		if rsc == "1" {
-			jsonData, err := json.MarshalIndent(page, "", "  ")
-			if err != nil {
-				fmt.Printf("Error serializing data: %v", err)
-				return
-			}
-
-			w.Header().Set("Content-Type", "text/x-component; charset=utf-8")
-			w.Write(jsonData)
-			w.Write([]byte("\n\n"))
-			flush()
-
-			{
-				for chunk := range getChunkCh() {
-					newEncoder := json.NewEncoder(w)
-					newEncoder.SetEscapeHTML(false) // TODO: check if this is safe
-					err := newEncoder.Encode(chunk)
-					if err != nil {
-						fmt.Printf("Error encoding chunk: %v", err)
-						return
-					}
-					w.Write([]byte("\n"))
-					flush()
-				}
-			}
-
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Write([]byte("<!doctype html>"))
-		// flush()
-		err := strike.RenderToString(w, page)
-		if err != nil {
-			fmt.Printf("Error rendering page: %v", err)
-			return
-		}
-
-		// <-skeletonDone
-
-		flush()
-		// w.Write([]byte("Hello, World!"))
-		jsonData, err := json.MarshalIndent(page, "", "  ")
-
-		if err != nil {
-			fmt.Printf("Error serializing data: %v", err)
-			return
-		}
-
-		const tpl = `<script>self.__rsc=self.__rsc||[];__rsc.push({{.}})</script>`
-
-		t, err := template.New("webpage").Parse(tpl)
-
-		if err != nil {
-			fmt.Printf("Error parsing template: %v", err)
-			return
-		}
-
-		err = t.Execute(w, string(jsonData))
-
-		if err != nil {
-			fmt.Printf("Error parsing template: %v", err)
-			return
-		}
-
-		{ // debug JSX
-			w.Write([]byte("\n<template>"))
-			w.Write(jsonData)
-			w.Write([]byte("</template>"))
-		}
-
-		{
-			for chunk := range getChunkCh() {
-				jsonData, err := json.MarshalIndent(chunk, "", "  ")
-				if err != nil {
-					fmt.Printf("Error serializing data: %v", err)
-					return
-				}
-				err = t.Execute(w, string(jsonData))
-				if err != nil {
-					fmt.Printf("Error parsing template: %v", err)
-					return
-				}
-				flush()
-			}
-		}
-	})
+	serverActions.Register("test123", action.ActionFunc(func(ctx context.Context, args url.Values) (any, error) {
+		lastForm = fmt.Sprintf("%v", args)
+		fmt.Println("test123", args)
+		promise := promise.NewPromise[any](ctx)
+		promise.ResolveAsync(func() any {
+			time.Sleep(1000 * time.Millisecond)
+			return "data"
+		})
+		return promise, nil
+	}))
+	http.Handle("/", strike_http.NewRscHandler(serverActions, func(w http.ResponseWriter, r *http.Request, ctx context.Context) strike.Component {
+		return Page(r.URL, App(r.URL, ctx))
+	}))
 	fmt.Println("Server started at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
