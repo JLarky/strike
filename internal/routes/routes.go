@@ -45,7 +45,7 @@ func NewRouter() *chi.Mux {
 	r.Method("GET", "/static/app/islands.js", Handler(staticHandler2))
 	r.Method("GET", "/", Handler(rscHandler))
 	r.Method("GET", "/about", Handler(rscHandler))
-	r.Method("GET", "/_strike/*", strike_http.NewHandler())
+	r.Method("GET", "/_strike/*", strike_http.NewAssetsHandler())
 
 	return r
 }
