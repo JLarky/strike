@@ -9,7 +9,10 @@ import (
 //go:embed assets/*
 var static embed.FS
 
-func NewHandler() http.Handler {
+// NewAssetsHandler returns a http.Handler that serves the strike static assets. Example:
+//
+//	http.Handle("/_strike/", strike_http.NewAssetsHandler())
+func NewAssetsHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "public, max-age=86400")
 		fSys, err := fs.Sub(static, "assets")

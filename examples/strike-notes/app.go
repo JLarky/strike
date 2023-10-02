@@ -53,7 +53,7 @@ func main() {
 		}
 		http.FileServer(http.FS(fSys)).ServeHTTP(w, r)
 	}))
-	http.Handle("/_strike/", strike_http.NewHandler())
+	http.Handle("/_strike/", strike_http.NewAssetsHandler())
 	http.Handle("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "public, max-age=86400")
 		fSys, err := fs.Sub(static, "public")
