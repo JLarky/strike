@@ -46,6 +46,8 @@ I don't understand how HTML escaping works in Go, so I assure you there's prenty
 
 This was built in public, you can watch it in the [YT Playlist](https://youtube.com/playlist?list=PLuPYpWKKQ-H12ajPoPdUO5jAhfjTeprhI&si=3ioo0SA3sP7mWuQa).
 
+As seen on TV: https://youtu.be/7Co0qXGcE5I?si=FMfj45GB8A-lWy1P
+
 # Profiling
 
 <details>
