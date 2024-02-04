@@ -51,25 +51,41 @@ As seen on TV: https://youtu.be/7Co0qXGcE5I?si=FMfj45GB8A-lWy1P
 # Profiling
 
 <details>
-<summary>Click to expand</summary>
-- [pprof README](https://github.com/google/pprof/blob/main/doc/README.md)
-- [pprof package](https://pkg.go.dev/runtime/pprof)
-- [profiling](https://hackernoon.com/go-the-complete-guide-to-profiling-your-code-h51r3waz)
-
-For load testing:
-- sudo ulimit -n 6049
-- sudo sysctl -w kern.ipc.somaxconn=1024
-- [source](https://github.com/golang/go/issues/20960#issuecomment-465998114)
+  <summary>Click to expand</summary>
+  <ul>
+    <li>
+      <a href="https://github.com/google/pprof/blob/main/doc/README.md">pprof README</a>
+    </li>
+    <li>
+      <a href="https://pkg.go.dev/runtime/pprof">pprof package</a>
+    </li>
+    <li>
+      <a href="https://hackernoon.com/go-the-complete-guide-to-profiling-your-code-h51r3waz">profiling</a>
+    </li>
+    <li>
+      <strong>For load testing:</strong>
+    </li>
+    <li>
+      sudo ulimit -n 6049
+    </li>
+    <li>
+      sudo sysctl -w kern.ipc.somaxconn=1024
+    </li>
+    <li>
+      <a href="https://github.com/golang/go/issues/20960#issuecomment-465998114">source</a>
+    </li>
+  </ul>
 </details>
 
-```
+
+```bash
 brew install graphviz
 # or
 apt-get install graphviz gv
 go get -u github.com/google/pprof
 ```
 
-```
+```bash
 air --build.bin "go test -cpuprofile cpu.prof -memprofile mem.prof -bench=^Benchmark github.com/JLarky/strike/pkg/strike" --build.exclude_regex "" --build.cmd "true"
 
 pprof -http=:3000 cpu.prof
