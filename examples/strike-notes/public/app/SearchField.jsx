@@ -21,7 +21,7 @@ export default function SearchField() {
   const [isSearching, startSearching] = useTransition();
   // const { navigate } = useRouter();
   return (
-    <form className="search" role="search" onSubmit={(e) => e.preventDefault()}>
+    <form className="search" role="search" action={(x) => console.log(x)}>
       <label className="offscreen" htmlFor="sidebar-search-input">
         Search for a note by title
       </label>

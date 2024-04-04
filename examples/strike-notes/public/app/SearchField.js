@@ -26,7 +26,7 @@ function SearchField() {
   return jsx2("form", {
     className: "search",
     role: "search",
-    onSubmit: (e) => e.preventDefault(),
+    action: (x) => console.log(x),
     children: [
       jsx2("label", {
         className: "offscreen",
