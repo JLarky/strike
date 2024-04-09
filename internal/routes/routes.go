@@ -2,7 +2,10 @@ package routes
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/sha256"
 	"embed"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -35,7 +38,6 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func NewRouter() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
@@ -71,6 +73,11 @@ func Island(componentName string, props Props, fallback any) Component {
 var serverCounter uint64
 
 func rscHandler(w http.ResponseWriter, r *http.Request) error {
+	b := make([]byte, 32)
+	rand.Read(b)
+	sha := sha256.New()
+	sha.Write(b)
+	sha256 := base64.StdEncoding.EncodeToString([]byte(sha.Sum(nil)))
 	nav := H("nav",
 		H("a", h.Props{"href": "/"}, "Home"), " ",
 		H("a", h.Props{"href": "/about"}, "About"),
@@ -98,7 +105,7 @@ func rscHandler(w http.ResponseWriter, r *http.Request) error {
 		nav,
 		H("div",
 			H("div", "My page is "+r.URL.Path),
-			H("div", "and your IP is "+r.RemoteAddr+" (intention is to show that this is server rendered)"),
+			H("div", "and I generated this sha256 on the server: " + sha256),
 			island,
 		),
 		footer,
