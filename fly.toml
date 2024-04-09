@@ -9,6 +9,8 @@ primary_region = "den"
 [build]
   builder = "paketobuildpacks/builder:base"
   buildpacks = ["gcr.io/paketo-buildpacks/go"]
+  [build.args]
+    GO_VERSION = '1.21.5'
 
 [env]
   PORT = "8080"
