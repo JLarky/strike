@@ -7,6 +7,8 @@ export type RemotePromise = {
   reject: (reason: any) => void;
 };
 
+export declare function chunkToJSX(ctx: CTX, str: string): any;
+
 export declare function createRemotePromise(id: string): RemotePromise;
 
 export declare function remotePromiseFromCtx(

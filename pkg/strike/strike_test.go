@@ -105,7 +105,7 @@ func TestPromiseComponent2(t *testing.T) {
 		panic(fmt.Sprintf("Error serializing data: %v", err))
 	}
 
-	assert.Equal(t, `{"$strike":"component","$type":"strike-island","props":{"children":[{"$strike":"component","$type":"div","props":{"children":["Hello"]}}],"ssrFallback":{"$strike":"component","$type":"div","props":{"children":["Loading..."]}}}}`, string(jsonData))
+	assert.Equal(t, `["$strike:element","strike-island",{"children":[["$strike:element","div",{"children":["Hello"]}]],"ssrFallback":["$strike:element","div",{"children":["Loading..."]}]}]`, string(jsonData))
 
 	assert.Equal(t, `<div>Loading...</div>`, renderToString(a))
 }
@@ -132,7 +132,7 @@ func TestSuspenseComponentWithChunks(t *testing.T) {
 	))
 	assert.Equal(t, `<div><!-- Suspense Starts --><div>Loading suspense...</div><!-- Suspense Ends --></div>`, renderToString(a))
 	for chunk := range getChunkCh() {
-		assert.EqualJSON(t, `{"$strike":"promise-result","id":"1","result":{"$strike":"component","$type":"div","props":{"children":["Hello"]}}}`, chunk)
+		assert.EqualJSON(t, `{"$strike":"promise-result","id":"1","result":["$strike:element","div",{"children":["Hello"]}]}`, chunk)
 	}
 }
 

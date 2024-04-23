@@ -12,10 +12,16 @@ type Component struct {
 }
 
 func (c Component) MarshalJSON() ([]byte, error) {
-	return json.Marshal(map[string]any{
-		"$strike": "component",
-		"$type":   c.Tag_type,
-		"props":   c.Props,
+	if c.Tag_type == "strike-island" {
+		return json.Marshal([]any{
+			"$strike:island-go",
+			c.Props,
+		})
+	}
+	return json.Marshal([]any{
+		"$strike:element",
+		c.Tag_type,
+		c.Props,
 	})
 }
 

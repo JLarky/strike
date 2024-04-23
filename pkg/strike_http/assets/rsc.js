@@ -4,6 +4,15 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import { StrikeIsland } from "./islands.js";
 import { StrikeSuspense } from "./suspense.js";
 
+const __debug = {
+  /** @type {any[]} */
+  chunks: [],
+  /** @type {any[]} */
+  jsx: [],
+};
+// @ts-ignore
+window.__debug = __debug;
+
 /** @type {import("./rsc").RscComponent} */
 export function RscComponent({ isInitial, url, routerKey, actionData }) {
   if (isInitial) {
@@ -79,11 +88,14 @@ async function chunksToJSX(chunks, ctx = newContext()) {
   return root;
 }
 
+/** @type {import("./rsc").chunkToJSX}*/
 export function chunkToJSX(ctx, x) {
+  __debug.chunks.push(JSON.parse(x));
   const parsed = JSON.parse(x, function fromJSON(key, value) {
     return parseModelString(ctx, this, key, value);
   });
   // console.log("str", parsed, ctx);
+  __debug.jsx.push(parsed);
   return parsed;
 }
 
@@ -127,6 +139,48 @@ function actionify(obj, actionId) {
 
 /** @type {import("./rsc").parseModelString} */
 function parseModelString(ctx, parent, key, value) {
+  if (Array.isArray(value)) {
+    if (value[0] === "$strike:element") {
+      return {
+        $$typeof: Symbol.for("react.element"),
+        type: value[1],
+        ref: null,
+        key: null,
+        props: value[2],
+      };
+    } else if (value[0] === "$strike:text") {
+      return value[1];
+    } else if (value[0] === "$strike:island") {
+      return {
+        $$typeof: Symbol.for("react.element"),
+        type: StrikeIsland,
+        ref: null,
+        key: null,
+        props: {
+          component: value[1],
+          islandProps: value[2],
+          ssrFallback: value[3],
+        },
+      };
+    } else if (value[0] === "$strike:island-go") {
+      const {
+        "component-export": component,
+        ssrFallback,
+        ...islandProps
+      } = value[1];
+      return {
+        $$typeof: Symbol.for("react.element"),
+        type: StrikeIsland,
+        ref: null,
+        key: null,
+        props: {
+          component,
+          islandProps,
+          ssrFallback,
+        },
+      };
+    }
+  }
   if (
     key === "data-$strike-action" &&
     typeof value === "string" &&
