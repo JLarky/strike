@@ -111,6 +111,7 @@ func rscHandler(w http.ResponseWriter, r *http.Request) error {
 		footer,
 	)
 
+	// page := H("html", Props{"lang": "en", "suppressHydrationWarning": true},
 	page := H("html", Props{"lang": "en"},
 		H("head",
 			H("title", "Title "+r.URL.Path),
