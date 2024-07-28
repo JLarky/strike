@@ -1,15 +1,11 @@
 package routes
 
 import (
-	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
 	"embed"
 	"encoding/base64"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
 	"sync/atomic"
 
@@ -17,7 +13,6 @@ import (
 	"github.com/JLarky/strike/pkg/h"
 	. "github.com/JLarky/strike/pkg/h"
 	"github.com/JLarky/strike/pkg/island"
-	"github.com/JLarky/strike/pkg/strike"
 	"github.com/JLarky/strike/pkg/strike_http"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -121,57 +116,7 @@ func rscHandler(w http.ResponseWriter, r *http.Request) error {
 			body,
 		))
 
-	jsonData, err := json.Marshal(page)
-
-	if err != nil {
-		return err
-	}
-
-	htmlStringBuf := new(bytes.Buffer)
-	err = strike.RenderToString(htmlStringBuf, page)
-	if err != nil {
-		return err
-	}
-
-	q := r.URL.Query().Get("err")
-
-	if q != "" {
-		return errors.New(q)
-	}
-
-	rsc := r.Header.Get("RSC")
-	if rsc == "1" {
-		w.Header().Set("Content-Type", "text/x-component; charset=utf-8")
-		w.Write(jsonData)
-		return nil
-	}
-
-	const tpl = `<!DOCTYPE html>{{.HtmlString}}<script>self.__rsc=self.__rsc||[];__rsc.push({{.JsonData}})</script>`
-
-	t, err := template.New("webpage").Parse(tpl)
-
-	if err != nil {
-		return err
-	}
-
-	data := struct {
-		Title      string
-		JsonData   string
-		HtmlString template.HTML
-	}{
-		// My page plus current time in ms
-		Title:      "Title",
-		JsonData:   string(jsonData),
-		HtmlString: template.HTML(htmlStringBuf.String()),
-	}
-
-	err = t.Execute(w, data)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return framework.RscHandler(w, r, page)
 }
 
 // http hello world 60-80k rps
