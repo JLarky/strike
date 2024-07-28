@@ -95,31 +95,31 @@ func rewriteHead(head h.Component) {
 }
 
 func Bootstrap() []Component {
-	// "react": "https://esm.sh/react@canary?dev",
-	// "react-dom/client": "https://esm.sh/react-dom@canary/client?dev",
-	// "react/jsx-runtime": "https://esm.sh/react@canary/jsx-runtime?dev",
+	bootstrap := "_strike/bootstrap.js"
+	react := "https://esm.sh/react@0.0.0-experimental-9ba1bbd65-20230922?dev"
+	react_client := "https://esm.sh/react-dom@0.0.0-experimental-9ba1bbd65-20230922/client?dev"
+	react_dom := "https://esm.sh/react-dom@0.0.0-experimental-9ba1bbd65-20230922?dev"
+	react_jsx := "https://esm.sh/react@0.0.0-experimental-9ba1bbd65-20230922/jsx-runtime?dev"
+	react_error_boundary := "https://esm.sh/react-error-boundary@4.0.11"
 
-	// "react": "https://esm.sh/react@18.3.0-canary-2807d781a-20230918",
-	// "react-dom/client": "https://esm.sh/react-dom@18.3.0-canary-2807d781a-20230918/client",
-	// "react/jsx-runtime": "https://esm.sh/react@18.3.0-canary-2807d781a-20230918/jsx-runtime",
 	return []Component{
 		H("script", Props{"type": "importmap"}, []template.HTML{`
 			{
 				"imports": {
 					"strike_islands": "/static/app/islands.js",
-					"react": "https://esm.sh/react@0.0.0-experimental-9ba1bbd65-20230922?dev",
-					"react-dom/client": "https://esm.sh/react-dom@0.0.0-experimental-9ba1bbd65-20230922/client?dev",
-					"react-dom": "https://esm.sh/react-dom@0.0.0-experimental-9ba1bbd65-20230922?dev",
-					"react/jsx-runtime": "https://esm.sh/react@0.0.0-experimental-9ba1bbd65-20230922/jsx-runtime?dev",
-					"react-error-boundary": "https://esm.sh/react-error-boundary@4.0.11"
+					"react": "`, template.HTML(react), `",
+					"react-dom/client": "`, template.HTML(react_client), `",
+					"react-dom": "`, template.HTML(react_dom), `",
+					"react/jsx-runtime": "`, template.HTML(react_jsx), `",
+					"react-error-boundary": "`, template.HTML(react_error_boundary), `"
 				}
 			}`}),
-		H("link", Props{"rel": "modulepreload", "href": "/_strike/bootstrap.js"}),
-		H("link", Props{"rel": "modulepreload", "href": "https://esm.sh/v132/react-error-boundary@4.0.11/es2022/react-error-boundary.mjs"}),
-		H("link", Props{"rel": "modulepreload", "href": "https://esm.sh/react-error-boundary@4.0.11"}),
-		H("link", Props{"rel": "modulepreload", "href": "https://esm.sh/react@0.0.0-experimental-9ba1bbd65-20230922?dev"}),
-		H("link", Props{"rel": "modulepreload", "href": "https://esm.sh/react-dom@0.0.0-experimental-9ba1bbd65-20230922"}),
-		H("link", Props{"rel": "modulepreload", "href": "https://esm.sh/react-dom@0.0.0-experimental-9ba1bbd65-20230922/client"}),
-		H("script", Props{"async": "async", "type": "module", "src": "/_strike/bootstrap.js"}),
+		H("link", Props{"rel": "modulepreload", "href": bootstrap}),
+		H("link", Props{"rel": "modulepreload", "href": react}),
+		H("link", Props{"rel": "modulepreload", "href": react_client}),
+		H("link", Props{"rel": "modulepreload", "href": react_dom}),
+		H("link", Props{"rel": "modulepreload", "href": react_jsx}),
+		H("link", Props{"rel": "modulepreload", "href": react_error_boundary}),
+		H("script", Props{"async": "async", "type": "module", "src": bootstrap}),
 	}
 }
