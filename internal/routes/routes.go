@@ -110,7 +110,6 @@ func rscHandler(w http.ResponseWriter, r *http.Request) error {
 	page := H("html", Props{"lang": "en"},
 		H("head",
 			H("title", "Title "+r.URL.Path),
-			framework.Bootstrap(),
 		),
 		H("body",
 			body,

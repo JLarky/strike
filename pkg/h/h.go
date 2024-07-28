@@ -83,3 +83,9 @@ func H(tag any, rest ...any) Component {
 		panic(fmt.Sprintf("Unsupported type: %T", tag_type))
 	}
 }
+
+func UpdateChildren(c Component, children_update func([]any) []any) Component {
+	children := c.Props["children"].([]any)
+	c.Props["children"] = children_update(children)
+	return c
+}
