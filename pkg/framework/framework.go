@@ -6,9 +6,9 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"os"
 
 	"github.com/JLarky/strike/pkg/h"
-	. "github.com/JLarky/strike/pkg/h"
 	"github.com/JLarky/strike/pkg/strike"
 )
 
@@ -94,16 +94,26 @@ func rewriteHead(head h.Component) {
 	})
 }
 
-func Bootstrap() []Component {
+func Bootstrap() []h.Component {
+	H := h.H
 	bootstrap := "_strike/bootstrap.js"
-	react := "https://esm.sh/react@0.0.0-experimental-9ba1bbd65-20230922?dev"
-	react_client := "https://esm.sh/react-dom@0.0.0-experimental-9ba1bbd65-20230922/client?dev"
-	react_dom := "https://esm.sh/react-dom@0.0.0-experimental-9ba1bbd65-20230922?dev"
-	react_jsx := "https://esm.sh/react@0.0.0-experimental-9ba1bbd65-20230922/jsx-runtime?dev"
+	react := "https://esm.sh/react@0.0.0-experimental-9ba1bbd65-20230922"
+	react_client := "https://esm.sh/react-dom@0.0.0-experimental-9ba1bbd65-20230922/client"
+	react_dom := "https://esm.sh/react-dom@0.0.0-experimental-9ba1bbd65-20230922"
+	react_jsx := "https://esm.sh/react@0.0.0-experimental-9ba1bbd65-20230922/jsx-runtime"
 	react_error_boundary := "https://esm.sh/react-error-boundary@4.0.11"
 
-	return []Component{
-		H("script", Props{"type": "importmap"}, []template.HTML{`
+	// in production PORT will be set by the hosting environment
+	is_dev := os.Getenv("PORT") == ""
+	if is_dev {
+		react += "?dev"
+		react_client += "?dev"
+		react_dom += "?dev"
+		react_jsx += "?dev"
+	}
+
+	return []h.Component{
+		H("script", h.Props{"type": "importmap"}, []template.HTML{`
 			{
 				"imports": {
 					"strike_islands": "/static/app/islands.js",
@@ -114,12 +124,12 @@ func Bootstrap() []Component {
 					"react-error-boundary": "`, template.HTML(react_error_boundary), `"
 				}
 			}`}),
-		H("link", Props{"rel": "modulepreload", "href": bootstrap}),
-		H("link", Props{"rel": "modulepreload", "href": react}),
-		H("link", Props{"rel": "modulepreload", "href": react_client}),
-		H("link", Props{"rel": "modulepreload", "href": react_dom}),
-		H("link", Props{"rel": "modulepreload", "href": react_jsx}),
-		H("link", Props{"rel": "modulepreload", "href": react_error_boundary}),
-		H("script", Props{"async": "async", "type": "module", "src": bootstrap}),
+		H("link", h.Props{"rel": "modulepreload", "href": bootstrap}),
+		H("link", h.Props{"rel": "modulepreload", "href": react}),
+		H("link", h.Props{"rel": "modulepreload", "href": react_client}),
+		H("link", h.Props{"rel": "modulepreload", "href": react_dom}),
+		H("link", h.Props{"rel": "modulepreload", "href": react_jsx}),
+		H("link", h.Props{"rel": "modulepreload", "href": react_error_boundary}),
+		H("script", h.Props{"async": "async", "type": "module", "src": bootstrap}),
 	}
 }
