@@ -105,7 +105,7 @@ func rscHandler(w http.ResponseWriter, r *http.Request) error {
 		nav,
 		H("div",
 			H("div", "My page is "+r.URL.Path),
-			H("div", "and I generated this sha256 on the server: " + sha256),
+			H("div", "and I generated this sha256 on the server: "+sha256),
 			island,
 		),
 		footer,
