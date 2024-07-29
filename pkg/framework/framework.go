@@ -97,11 +97,11 @@ func rewriteHead(head h.Component) {
 func Bootstrap() []h.Component {
 	H := h.H
 	bootstrap := "_strike/bootstrap.js"
-	react := "https://esm.sh/react@0.0.0-experimental-9ba1bbd65-20230922"
-	react_client := "https://esm.sh/react-dom@0.0.0-experimental-9ba1bbd65-20230922/client"
-	react_dom := "https://esm.sh/react-dom@0.0.0-experimental-9ba1bbd65-20230922"
-	react_jsx := "https://esm.sh/react@0.0.0-experimental-9ba1bbd65-20230922/jsx-runtime"
-	react_error_boundary := "https://esm.sh/react-error-boundary@4.0.11"
+	react := "https://esm.sh/react@0.0.0-experimental-14a4699f-20240725"
+	react_client := "https://esm.sh/react-dom@0.0.0-experimental-14a4699f-20240725/client"
+	react_dom := "https://esm.sh/react-dom@0.0.0-experimental-14a4699f-20240725"
+	react_jsx := "https://esm.sh/react@0.0.0-experimental-14a4699f-20240725/jsx-runtime"
+	react_error_boundary := "https://esm.sh/react-error-boundary@4.0.11?external=react" // to force react 19
 
 	// in production PORT will be set by the hosting environment
 	is_dev := os.Getenv("PORT") == ""
