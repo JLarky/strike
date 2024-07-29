@@ -11,6 +11,10 @@ export declare function chunkToJSX(ctx: CTX, str: string): any;
 
 export declare function createRemotePromise(id: string): RemotePromise;
 
+export declare function fetchChunksPromise(
+  href: string
+): Promise<React.ReactNode>;
+
 export declare function remotePromiseFromCtx(
   ctx: CTX,
   id: string
@@ -37,11 +41,13 @@ export declare function actionify(
 export declare function RscComponent({
   isInitial,
   url,
+  urlPromise,
   routerKey,
   actionData,
 }: {
   isInitial: boolean;
   url: string;
+  urlPromise: Promise<any>;
   routerKey: string;
   actionData: ActionData;
 }): React.ReactNode;

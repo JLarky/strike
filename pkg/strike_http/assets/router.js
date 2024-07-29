@@ -1,5 +1,9 @@
 // @ts-check
-import { RscComponent, createRemotePromise } from "./rsc.js";
+import {
+  RscComponent,
+  createRemotePromise,
+  fetchChunksPromise,
+} from "./rsc.js";
 import React from "react";
 import { jsx } from "react/jsx-runtime";
 
@@ -17,6 +21,7 @@ export function Router() {
   return jsx(RscComponent, {
     isInitial: router.isInitial,
     url: router.href,
+    urlPromise: router.urlPromise,
     routerKey: router.key,
     actionData: router.actionData,
   });
@@ -37,17 +42,18 @@ function createRouterState(href) {
   //   boot();
   // }
 
-  return { href, isInitial: true, key: "initial" };
+  return { href, urlPromise: undefined, isInitial: true, key: "initial" };
 }
 
 /** @type {import("./router.js").changeRouterState} */
 function changeRouterState(href, key) {
-  return { href, isInitial: false, key };
+  const urlPromise = fetchChunksPromise(href);
+  return { href, urlPromise, isInitial: false, key };
 }
 
 /** @type {import("./router.js").changeRouterStateForAction} */
 function changeRouterStateForAction(href, key, actionData) {
-  return { href, isInitial: false, key, actionData };
+  return { href, urlPromise: undefined, isInitial: false, key, actionData };
 }
 
 /** @type {import("./router.js").addNavigation} */

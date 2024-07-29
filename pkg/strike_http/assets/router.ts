@@ -11,6 +11,7 @@ export type ActionData = {
 export type RouterState = {
   key: string;
   href: string;
+  urlPromise: undefined | Promise<unknown>;
   isInitial: boolean;
   actionData?: ActionData;
 };

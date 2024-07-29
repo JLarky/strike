@@ -14,16 +14,20 @@ const __debug = {
 window.__debug = __debug;
 
 /** @type {import("./rsc").RscComponent} */
-export function RscComponent({ isInitial, url, routerKey, actionData }) {
+export function RscComponent({
+  isInitial,
+  url,
+  urlPromise,
+  routerKey,
+  actionData,
+}) {
   if (isInitial) {
-    return jsx(WaitForInitialJSX, {});
+    return waitForInitialJSX();
   }
   if (actionData) {
     return fetchClientJSXFromAction(url, routerKey, actionData);
   }
-  // return React.use(fetchClientJSX(url, routerKey));
-  // Error: Support for `use` not yet implemented in react-debug-tools.
-  return fetchClientJSX(url, routerKey);
+  return fetchClientJSX(urlPromise);
 }
 
 const initialChunksPromise = (() => {
@@ -31,18 +35,23 @@ const initialChunksPromise = (() => {
   return chunksToJSX(chunks);
 })();
 
-function WaitForInitialJSX() {
+function waitForInitialJSX() {
   return React.use(initialChunksPromise);
 }
 
-const fetchClientJSX = React.cache(async function fetchClientJSX(href, key) {
+/** @type {import("./rsc").fetchChunksPromise} */
+export const fetchChunksPromise = async (href) => {
   const response = await fetch(href, {
     headers: { RSC: "1" },
   });
 
   const chunks = readLines(response);
   return await chunksToJSX(chunks);
-});
+};
+
+function fetchClientJSX(urlPromise) {
+  return React.use(urlPromise);
+}
 
 const fetchClientJSXFromAction = React.cache(async function fetchClientJSX(
   href,
