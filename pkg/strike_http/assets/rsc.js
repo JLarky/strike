@@ -26,13 +26,13 @@ export function RscComponent({ isInitial, url, routerKey, actionData }) {
   return fetchClientJSX(url, routerKey);
 }
 
+const initialChunksPromise = (() => {
+  const chunks = readInitialChunks();
+  return chunksToJSX(chunks);
+})();
+
 function WaitForInitialJSX() {
-  const jsx = React.cache(() => {
-    const chunks = readInitialChunks();
-    return chunksToJSX(chunks);
-  }, []);
-  console.log("WaitForInitialJSX", jsx);
-  return jsx;
+  return React.use(initialChunksPromise);
 }
 
 const fetchClientJSX = React.cache(async function fetchClientJSX(href, key) {
@@ -145,44 +145,27 @@ function actionify(obj, actionId) {
 function parseModelString(ctx, parent, key, value) {
   if (Array.isArray(value)) {
     if (value[0] === "$strike:element") {
-      return {
-        $$typeof: Symbol.for("react.element"),
-        type: value[1],
-        ref: null,
-        key: null,
-        props: value[2],
-      };
+      const { key, ...props } = value[2];
+      return jsxs(value[1], props, key);
     } else if (value[0] === "$strike:text") {
       return value[1];
     } else if (value[0] === "$strike:island") {
-      return {
-        $$typeof: Symbol.for("react.element"),
-        type: StrikeIsland,
-        ref: null,
-        key: null,
-        props: {
-          component: value[1],
-          islandProps: value[2],
-          ssrFallback: value[3],
-        },
-      };
+      return jsx(StrikeIsland, {
+        component: value[1],
+        islandProps: value[2],
+        ssrFallback: value[3],
+      });
     } else if (value[0] === "$strike:island-go") {
       const {
         "component-export": component,
         ssrFallback,
         ...islandProps
       } = value[1];
-      return {
-        $$typeof: Symbol.for("react.element"),
-        type: StrikeIsland,
-        ref: null,
-        key: null,
-        props: {
-          component,
-          islandProps,
-          ssrFallback,
-        },
-      };
+      return jsxs(StrikeIsland, {
+        component,
+        islandProps,
+        ssrFallback,
+      });
     }
   }
   if (
