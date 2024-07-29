@@ -16,7 +16,7 @@ window.__debug = __debug;
 /** @type {import("./rsc").RscComponent} */
 export function RscComponent({ isInitial, url, routerKey, actionData }) {
   if (isInitial) {
-    return waitForInitialJSX();
+    return jsx(WaitForInitialJSX, {});
   }
   if (actionData) {
     return fetchClientJSXFromAction(url, routerKey, actionData);
@@ -26,10 +26,14 @@ export function RscComponent({ isInitial, url, routerKey, actionData }) {
   return fetchClientJSX(url, routerKey);
 }
 
-const waitForInitialJSX = React.cache(async function waitForInitialJSX() {
-  const chunks = readInitialChunks();
-  return await chunksToJSX(chunks);
-});
+function WaitForInitialJSX() {
+  const jsx = React.cache(() => {
+    const chunks = readInitialChunks();
+    return chunksToJSX(chunks);
+  }, []);
+  console.log("WaitForInitialJSX", jsx);
+  return jsx;
+}
 
 const fetchClientJSX = React.cache(async function fetchClientJSX(href, key) {
   const response = await fetch(href, {
