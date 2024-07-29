@@ -3,6 +3,7 @@ import {
   RscComponent,
   createRemotePromise,
   fetchChunksPromise,
+  fetchFromActionPromise,
 } from "./rsc.js";
 import React from "react";
 import { jsx } from "react/jsx-runtime";
@@ -18,13 +19,17 @@ export function Router() {
   React.useEffect(() => {
     addNavigation(setRouter);
   }, []);
-  return jsx(RscComponent, {
-    isInitial: router.isInitial,
-    url: router.href,
-    urlPromise: router.urlPromise,
-    routerKey: router.key,
-    actionData: router.actionData,
-  });
+  return jsx(
+    RscComponent,
+    /** @satisfies {import("./rsc").RscComponentProps} */ ({
+      isInitial: router.isInitial,
+      url: router.href,
+      urlPromise: router.urlPromise,
+      routerKey: router.key,
+      actionData: router.actionData,
+      actionPromise: router.actionPromise,
+    })
+  );
 }
 
 /** @type {import("./router.js").createRouterState} */
@@ -42,18 +47,38 @@ function createRouterState(href) {
   //   boot();
   // }
 
-  return { href, urlPromise: undefined, isInitial: true, key: "initial" };
+  return {
+    href,
+    urlPromise: undefined,
+    actionPromise: undefined,
+    isInitial: true,
+    key: "initial",
+  };
 }
 
 /** @type {import("./router.js").changeRouterState} */
 function changeRouterState(href, key) {
   const urlPromise = fetchChunksPromise(href);
-  return { href, urlPromise, isInitial: false, key };
+  return {
+    href,
+    urlPromise,
+    actionPromise: undefined,
+    isInitial: false,
+    key,
+  };
 }
 
 /** @type {import("./router.js").changeRouterStateForAction} */
 function changeRouterStateForAction(href, key, actionData) {
-  return { href, urlPromise: undefined, isInitial: false, key, actionData };
+  const actionPromise = fetchFromActionPromise(href, actionData);
+  return {
+    href,
+    urlPromise: undefined,
+    actionPromise,
+    isInitial: false,
+    key,
+    actionData,
+  };
 }
 
 /** @type {import("./router.js").addNavigation} */
@@ -103,8 +128,12 @@ function addNavigation(setRouter) {
     navigate(href);
   };
   /** @type {typeof window.__rscAction} */
-  window.__rscAction = (actionId, data) => {
-    const remotePromise = createRemotePromise("$ACTION_ID_" + actionId);
+  window.__rscAction = (actionId0, data) => {
+    let actionId = actionId0;
+    if (!actionId.startsWith("$ACTION_ID_")) {
+      actionId = "$ACTION_ID_" + actionId;
+    }
+    const remotePromise = createRemotePromise(actionId);
     submitForm({ actionId, data, remotePromise });
     return remotePromise.promise;
   };

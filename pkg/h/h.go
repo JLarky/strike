@@ -18,6 +18,12 @@ func (c Component) MarshalJSON() ([]byte, error) {
 			c.Props,
 		})
 	}
+	if c.Tag_type == "strike-form" {
+		return json.Marshal([]any{
+			"$strike:form",
+			c.Props,
+		})
+	}
 	return json.Marshal([]any{
 		"$strike:element",
 		c.Tag_type,

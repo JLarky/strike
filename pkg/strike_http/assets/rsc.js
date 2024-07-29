@@ -19,13 +19,14 @@ export function RscComponent({
   url,
   urlPromise,
   routerKey,
+  actionPromise,
   actionData,
 }) {
   if (isInitial) {
     return waitForInitialJSX();
   }
   if (actionData) {
-    return fetchClientJSXFromAction(url, routerKey, actionData);
+    return fetchClientJSXFromAction(actionPromise);
   }
   return fetchClientJSX(urlPromise);
 }
@@ -53,10 +54,9 @@ function fetchClientJSX(urlPromise) {
   return React.use(urlPromise);
 }
 
-const fetchClientJSXFromAction = React.cache(async function fetchClientJSX(
+/** @type {import("./rsc").fetchFromActionPromise} */
+export const fetchFromActionPromise = async function fetchFromActionPromise(
   href,
-  key,
-  /** @type {import("./router").ActionData} */
   actionData
 ) {
   const { actionId, data, remotePromise } = actionData;
@@ -74,18 +74,28 @@ const fetchClientJSXFromAction = React.cache(async function fetchClientJSX(
       formData.delete(k);
     }
   }
-  const actionName = "$ACTION_ID_" + actionId;
+  const actionName = actionId;
   formData.append(actionName, "");
   const response = await fetch(href, {
     method: "POST",
     headers: { RSC: "1" },
     body: formData,
+  }).catch((e) => {
+    remotePromise.reject(e);
   });
   const chunks = readLines(response);
   const ctx = newContext();
-  ctx.promises.set(actionName, remotePromise);
-  return await chunksToJSX(chunks, ctx);
-});
+  // FIXME: ctx.promises.set(actionName, remotePromise);
+  const jsx = await chunksToJSX(chunks, ctx).catch((e) => {
+    remotePromise.reject(e);
+  });
+  remotePromise.resolve("done");
+  return jsx;
+};
+
+function fetchClientJSXFromAction(actionPromise) {
+  return React.use(actionPromise);
+}
 
 function newContext() {
   return { promises: new Map() };
@@ -175,15 +185,18 @@ function parseModelString(ctx, parent, key, value) {
         islandProps,
         ssrFallback,
       });
+    } else if (value[0] === "$strike:form") {
+      // fixes `Cannot specify a encType or method for a form that specifies a function as the action. React provides those automatically. They will get overridden.`
+      const {
+        key,
+        encType,
+        method,
+        ["data-$strike-action"]: id,
+        ...props
+      } = value[1];
+      actionify(props, id);
+      return jsxs("form", props, key);
     }
-  }
-  if (
-    key === "data-$strike-action" &&
-    typeof value === "string" &&
-    value.startsWith("$ACTION_ID_")
-  ) {
-    const actionId = value.substring("$ACTION_ID_".length);
-    actionify(parent, actionId);
   }
   if (key === "$strike" && value === "action") {
     actionify(parent, parent.id);

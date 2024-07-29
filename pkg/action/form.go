@@ -6,16 +6,18 @@ import (
 	"github.com/JLarky/strike/pkg/h"
 )
 
+const formComponentName = "strike-form"
+
 // for fallback if form was not hydrated
 
 func Form(comp h.Component) h.Component {
-	comp.Tag_type = "form"
+	comp.Tag_type = formComponentName
 
 	if comp.Props["method"] == nil {
 		comp.Props["method"] = "POST"
 	}
-	if comp.Props["enctype"] == nil {
-		comp.Props["enctype"] = "multipart/form-data"
+	if comp.Props["encType"] == nil {
+		comp.Props["encType"] = "multipart/form-data"
 	}
 	if comp.Props["action"] == nil {
 		log.Println("action is required for a form")
@@ -33,4 +35,8 @@ func Form(comp h.Component) h.Component {
 	}
 
 	return comp
+}
+
+func IsForm(comp h.Component) bool {
+	return comp.Tag_type == formComponentName
 }

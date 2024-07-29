@@ -2,15 +2,31 @@ package framework
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"net/http"
 	"os"
 
+	"github.com/JLarky/strike/pkg/action"
 	"github.com/JLarky/strike/pkg/h"
 	"github.com/JLarky/strike/pkg/strike"
 )
+
+func ActionHandler(ctx context.Context, r *http.Request, serverActions *action.ServerActions) (any, error) {
+	if r.Method == "POST" {
+		r.ParseMultipartForm(10 << 20)
+		action, err := serverActions.ConsumeForm(r.PostForm)
+		if err != nil {
+			fmt.Printf("Error consuming the action: %v", err)
+			return nil, err
+		}
+		return action.Action(ctx, r.PostForm)
+	}
+	return nil, nil
+}
 
 func RscHandler(w http.ResponseWriter, r *http.Request, rsc h.Component) error {
 	is_rsc := r.Header.Get("RSC")

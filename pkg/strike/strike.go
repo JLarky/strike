@@ -47,6 +47,11 @@ func RenderToString(wr io.Writer, comp Component) error {
 			return nil
 		}
 	}
+	if comp.Tag_type == "strike-form" {
+		comp.Tag_type = "form"
+		delete(comp.Props, "data-$strike-action") // fixes hydration mismatch
+		return RenderToString(wr, (comp))
+	}
 	wr.Write([]byte("<" + comp.Tag_type))
 	for prop, value := range comp.Props {
 		// Perform a type assertion to convert `value` to a string

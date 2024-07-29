@@ -1,14 +1,18 @@
 package routes
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"embed"
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"net/url"
 	"sync/atomic"
+	"time"
 
+	"github.com/JLarky/strike/pkg/action"
 	"github.com/JLarky/strike/pkg/framework"
 	"github.com/JLarky/strike/pkg/h"
 	. "github.com/JLarky/strike/pkg/h"
@@ -30,19 +34,33 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+var serverActions = action.NewServerActions()
+var lastForm = ""
+
 func NewRouter() *chi.Mux {
+	serverActions.Register("test123", action.ActionFunc(func(ctx context.Context, args url.Values) (any, error) {
+		lastForm = fmt.Sprintf("%v", args)
+		fmt.Println("test123 action >>> ", args)
+		time.Sleep(100 * time.Millisecond)
+		name := args.Get("name")
+		if name == "bad" {
+			return nil, fmt.Errorf("name can't be bad")
+		}
+		return name, nil
+	}))
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-
-	r.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("hello world 1123"))
-	})
 	r.Method("GET", "/static/app/islands.js", Handler(staticHandler2))
 	r.Method("GET", "/", Handler(rscHandler))
 	r.Method("GET", "/about", Handler(rscHandler))
 	r.Method("GET", "/_strike/*", strike_http.NewAssetsHandler())
+
+	// have to have both for forms
+	r.Method("GET", "/form", Handler(formHandler))
+	r.Method("POST", "/form", Handler(formHandler))
 
 	return r
 }
@@ -115,6 +133,39 @@ func rscHandler(w http.ResponseWriter, r *http.Request) error {
 			body,
 		))
 
+	return framework.RscHandler(w, r, page)
+}
+
+func formHandler(w http.ResponseWriter, r *http.Request) error {
+	name := ""
+	ctx := r.Context()
+
+	data, err := framework.ActionHandler(ctx, r, serverActions)
+	if err != nil {
+		fmt.Println("Error in action", err)
+		return err
+	}
+	if data != nil {
+		name = data.(string)
+	}
+
+	body := H(action.Form, Props{"action": serverActions.GetOrFail("test123")},
+		H("input", Props{"type": "text", "name": "name"}),
+		H("button", "Submit"),
+	)
+	name_block := H("div", "Please enter your name in the form below")
+	if name != "" {
+		name_block = H("div", "Your name: "+name)
+	}
+	page := H("html", Props{"lang": "en"},
+		H("head",
+			H("title", "Form example"),
+		),
+		H("body",
+			H("div", "Last form: "+lastForm),
+			name_block,
+			body,
+		))
 	return framework.RscHandler(w, r, page)
 }
 

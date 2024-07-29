@@ -15,6 +15,11 @@ export declare function fetchChunksPromise(
   href: string
 ): Promise<React.ReactNode>;
 
+export declare function fetchFromActionPromise(
+  href: string,
+  actionData: ActionData
+): Promise<React.ReactNode>;
+
 export declare function remotePromiseFromCtx(
   ctx: CTX,
   id: string
@@ -38,16 +43,20 @@ export declare function actionify(
   actionId: string
 ): void;
 
+export type RscComponentProps = {
+  isInitial: boolean;
+  url: string;
+  urlPromise: Promise<unknown> | undefined;
+  routerKey: string;
+  actionData: ActionData | undefined;
+  actionPromise: Promise<unknown> | undefined;
+};
+
 export declare function RscComponent({
   isInitial,
   url,
   urlPromise,
   routerKey,
   actionData,
-}: {
-  isInitial: boolean;
-  url: string;
-  urlPromise: Promise<any>;
-  routerKey: string;
-  actionData: ActionData;
-}): React.ReactNode;
+  actionPromise,
+}: RscComponentProps): React.ReactNode;

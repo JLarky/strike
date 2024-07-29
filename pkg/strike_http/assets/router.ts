@@ -14,6 +14,7 @@ export type RouterState = {
   urlPromise: undefined | Promise<unknown>;
   isInitial: boolean;
   actionData?: ActionData;
+  actionPromise: undefined | Promise<unknown>;
 };
 
 export declare function createRouterState(href: string): RouterState;
