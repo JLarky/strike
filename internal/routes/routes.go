@@ -26,7 +26,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		// handle returned error here.
 		w.WriteHeader(503)
-		w.Write([]byte("bad"))
+		w.Write([]byte("Internal Server Error"))
 	}
 }
 
