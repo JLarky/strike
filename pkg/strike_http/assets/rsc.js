@@ -198,51 +198,15 @@ function parseModelString(ctx, parent, key, value) {
       return jsxs("form", props, key);
     }
   }
-  if (key === "$strike" && value === "action") {
-    actionify(parent, parent.id);
-  } else if (key === "$strike" && value === "promise-result") {
-    const remote = remotePromiseFromCtx(ctx, parent.id);
-    remote.resolve(parent.result);
-  } else if (key === "$strike" && value === "promise") {
-    const remote = remotePromiseFromCtx(ctx, parent.id);
-    promisify(parent, remote.promise);
-  } else if (key === "$strike" && value === "component") {
-    parent["$$typeof"] = Symbol.for("react.element");
-    parent.type = parent["$type"];
-    delete parent["$type"];
-    parent.ref = null;
-    parent.key = parent.props.key || null;
-    for (const [k, v] of Object.entries(parent.props || {})) {
-      if (k === "style" && typeof v === "string") {
-        /** @type {{ [key: string]: string }} */
-        const style = {};
-        v.split(";").forEach((x) => {
-          const [k, v] = x.split(":");
-          if (k && v) {
-            style[k.trim()] = v.trim();
-          }
-        });
-        parent.props.style = style;
-      } else if (k === "key") {
-        key = v;
-        delete parent.props.key;
-      } else if (k === "class") {
-        delete parent.props.class;
-        parent.props.className = v;
-      } else if (parent.type === "meta" && k === "charset") {
-        delete parent.props.charset;
-        parent.props.charSet = v;
-      } else {
-        parent.props[k] = v;
-      }
-    }
-    if (parent.type === "strike-suspense") {
-      parent.type = StrikeSuspense;
-    } else if (parent.type === "strike-island") {
-      parent.type = StrikeIsland;
-    }
-    return undefined;
-  }
+  // if (key === "$strike" && value === "action") {
+  //   actionify(parent, parent.id);
+  // } else if (key === "$strike" && value === "promise-result") {
+  //   const remote = remotePromiseFromCtx(ctx, parent.id);
+  //   remote.resolve(parent.result);
+  // } else if (key === "$strike" && value === "promise") {
+  //   const remote = remotePromiseFromCtx(ctx, parent.id);
+  //   promisify(parent, remote.promise);
+  // }
   return value;
 }
 
